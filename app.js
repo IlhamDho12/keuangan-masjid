@@ -8,7 +8,8 @@ const FIREBASE_CONFIG = {
     appId: '1:777548315983:web:d61cc7602e211088c8d93a'
 };
 
-const ADMIN_EMAILS = ['redhoi73@gmail.com'];
+const ADMIN_LOGIN_EMAIL = '2010802002@radenfatah.ac.id';
+const ADMIN_EMAILS = [ADMIN_LOGIN_EMAIL];
 const APP_SETTINGS_DOC = 'main';
 
 let firebaseApp = null;
@@ -1396,9 +1397,7 @@ window.deleteFeedback = function(id) {
 // ================= ADMIN LOGIN & AUTHENTICATION =================
 async function handleAdminLogin(e) {
     e.preventDefault();
-    const emailInput = document.getElementById('admin-email');
     const pwInput = document.getElementById('admin-password');
-    const emailVal = emailInput.value.trim().toLowerCase();
     const pwVal = pwInput.value;
 
     if (!firebaseReady) {
@@ -1407,7 +1406,7 @@ async function handleAdminLogin(e) {
     }
 
     try {
-        const credential = await firebaseAuth.signInWithEmailAndPassword(emailVal, pwVal);
+        const credential = await firebaseAuth.signInWithEmailAndPassword(ADMIN_LOGIN_EMAIL, pwVal);
         if (!isAdminUser(credential.user)) {
             await firebaseAuth.signOut();
             throw new Error('Akun ini belum terdaftar sebagai admin sistem.');
@@ -1796,11 +1795,6 @@ window.togglePasswordVisibility = function(inputId, btnEl) {
 
 // ================= EVENT LISTENER INITIALIZATIONS =================
 document.addEventListener('DOMContentLoaded', () => {
-    const adminEmailInput = document.getElementById('admin-email');
-    if (adminEmailInput && ADMIN_EMAILS.length) {
-        adminEmailInput.value = ADMIN_EMAILS[0];
-    }
-
     if (firebaseReady) {
         firebaseAuth.onAuthStateChanged(async (user) => {
             const authenticated = isAdminUser(user);
