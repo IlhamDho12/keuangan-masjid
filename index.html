@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Keuangan Masjid Raudhatul Khoiriyah</title>
+    <meta name="description" content="Portal transparansi kas, program pembangunan, dan laporan proyek real-time Masjid Raudhatul Khoiriyah, Kelurahan Pagar Tengah, Pendopo.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Keuangan Masjid Raudhatul Khoiriyah">
+    <meta property="og:description" content="Portal transparansi kas, program pembangunan, & laporan proyek real-time Masjid Raudhatul Khoiriyah, Kelurahan Pagar Tengah.">
+    <meta property="og:image" content="assets/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Keuangan Masjid Raudhatul Khoiriyah">
+    <meta name="twitter:description" content="Portal transparansi kas, program pembangunan, & laporan proyek real-time Masjid Raudhatul Khoiriyah, Kelurahan Pagar Tengah.">
+    <meta name="twitter:image" content="assets/logo.png">
+</head>
+<body class="mode-public">
+
+    <!-- ================= APP HEADER (Fixed Top) ================= -->
+    <header class="app-header" id="app-header">
+        <div class="app-header-inner">
+            <div class="header-brand">
+                <img src="assets/logo.png" alt="Logo" class="header-logo">
+                <div class="header-title">
+                    <span class="header-mosque-name">Raudhatul Khoiriyah</span>
+                    <span class="header-subtitle" id="header-subtitle">Pendopo, Empat Lawang, Sumatera Selatan</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <!-- Public mode: login button -->
+                <button class="header-action-btn" id="btn-go-admin" title="Masuk sebagai Admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <span>Masuk Admin</span>
+                </button>
+                <!-- Admin mode: profile chip + logout button -->
+                <div class="admin-header-profile" id="admin-header-profile" style="display:none;">
+                    <img src="" class="admin-avatar-mini" id="admin-avatar-mini" alt="Avatar">
+                    <span id="admin-name-mini">Bendahara</span>
+                </div>
+                <button class="header-action-btn btn-logout" id="btn-admin-logout" style="display:none;" title="Keluar Mode Admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= APP SHELL ================= -->
+    <div class="app-shell">
+
+        <!-- =========================================================== -->
+        <!-- ==================== PUBLIC SCREENS ======================= -->
+        <!-- =========================================================== -->
+        <div id="screens-public" class="screen-group active">
+
+            <!-- SCREEN: Beranda -->
+            <div class="app-screen active" id="pub-screen-beranda">
+                <!-- Hero Section -->
+                <div class="hero-section">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <span class="hero-tag">Kelurahan Pagar Tengah</span>
+                        <h2>Masjid Raudhatul Khoiriyah</h2>
+                        <p>Portal transparansi keuangan dan program dakwah masjid. Saldo kas diperbarui secara amanah dan real-time.</p>
+                        <div class="hero-stats">
+                            <div class="hero-stat-item">
+                                <span class="label">Total Saldo Kas</span>
+                                <span class="val number-font" id="hero-total-cash">Rp0</span>
+                            </div>
+                            <div class="hero-stat-item border-l">
+                                <span class="label">Pemasukan Bulan Ini</span>
+                                <span class="val number-font" id="hero-monthly-income">Rp0</span>
+                            </div>
+                            <div class="hero-stat-item border-l">
+                                <span class="label">Pengeluaran Bulan Ini</span>
+                                <span class="val number-font" id="hero-monthly-expense">Rp0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="screen-content">
+                    <!-- KPI Cards -->
+                    <div class="overview-grid">
+                        <div class="kpi-card total-balance">
+                            <div class="kpi-info">
+                                <h3>Total Kas Masjid</h3>
+                                <span class="kpi-value number-font" id="pub-total-cash">Rp0</span>
+                            </div>
+                            <div class="kpi-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                            </div>
+                            <div class="kpi-footer"><span>Status Kas Aktif &amp; Amanah</span></div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-info">
+                                <h3>Saldo Kas Tunai</h3>
+                                <span class="kpi-value number-font" id="pub-cash-balance">Rp0</span>
+                            </div>
+                            <div class="kpi-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                            </div>
+                            <div class="kpi-footer"><span>Kas Fisik / Uang Tunai</span></div>
+                        </div>
+                        <div class="kpi-card bank-balance">
+                            <div class="kpi-info">
+                                <h3>Saldo Rekening Bank</h3>
+                                <span class="kpi-value number-font" id="pub-bank-balance">Rp0</span>
+                            </div>
+                            <div class="kpi-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zm-7 12h17v-3H3v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-8.5-5z"/></svg>
+                            </div>
+                            <div class="kpi-footer"><span id="pub-bank-details">BSI, No. Rek: — a/n Masjid</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Update Info -->
+                    <div class="update-info-bar">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <span id="pub-last-updated">Memuat data terakhir...</span>
+                    </div>
+
+                    <!-- QRIS Button -->
+                    <div class="qris-promo-card">
+                        <div class="qris-promo-left">
+                            <span class="qris-label">Donasi via QRIS</span>
+                            <p>Scan untuk berdonasi langsung ke rekening resmi masjid</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-show-qris">Scan QRIS</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Keuangan -->
+            <div class="app-screen" id="pub-screen-keuangan">
+                <div class="screen-content">
+                    <!-- Chart Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Grafik Kas Bulanan</h2>
+                            <div class="card-header-actions">
+                                <select id="chart-filter-year" style="font-size:0.8rem; padding: 0.25rem 0.5rem;"></select>
+                                <select id="chart-filter-month" style="font-size:0.8rem; padding: 0.25rem 0.5rem;">
+                                    <option value="all">Semua Bulan</option>
+                                    <option value="01">Jan</option><option value="02">Feb</option>
+                                    <option value="03">Mar</option><option value="04">Apr</option>
+                                    <option value="05">Mei</option><option value="06">Jun</option>
+                                    <option value="07">Jul</option><option value="08">Agu</option>
+                                    <option value="09">Sep</option><option value="10">Okt</option>
+                                    <option value="11">Nov</option><option value="12">Des</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                             <div class="chart-container" id="chart-container">
+                                 <div id="svg-chart-wrapper" style="width: 100%; height: 210px;"></div>
+                                 <div class="chart-legend">
+                                    <span class="legend-income">● Pemasukan</span>
+                                    <span class="legend-expense">● Pengeluaran</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h2>Riwayat Transaksi Kas</h2>
+                            <div class="card-header-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-print-report" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); color: #fff;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="13" height="13" style="margin-right:0.2rem; vertical-align:middle;"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg> Cetak Laporan
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="filter-bar">
+                                <input type="search" id="search-tx" placeholder="🔍 Cari transaksi...">
+                                <div class="filter-selects">
+                                    <select id="filter-month">
+                                        <option value="all">Semua Bulan</option>
+                                        <option value="01">Januari</option><option value="02">Februari</option>
+                                        <option value="03">Maret</option><option value="04">April</option>
+                                        <option value="05">Mei</option><option value="06">Juni</option>
+                                        <option value="07">Juli</option><option value="08">Agustus</option>
+                                        <option value="09">September</option><option value="10">Oktober</option>
+                                        <option value="11">November</option><option value="12">Desember</option>
+                                    </select>
+                                    <select id="filter-year"></select>
+                                    <select id="filter-type">
+                                        <option value="all">Semua Jenis</option>
+                                        <option value="income">Pemasukan</option>
+                                        <option value="expense">Pengeluaran</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body no-padding table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Deskripsi</th>
+                                        <th>Jenis</th>
+                                        <th class="text-right">Nominal</th>
+                                        <th class="text-center">Bukti</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="public-tx-body"></tbody>
+                                <tbody>
+                                    <tr id="tx-show-more-row" style="display:none;"></tr>
+                                </tbody>
+                            </table>
+                            <span id="tx-show-all-flag" data-show-all="false" style="display:none;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Program & Proyek -->
+            <div class="app-screen" id="pub-screen-program">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Program &amp; Proyek Masjid</h2>
+                        <p>Pantau perkembangan program pembangunan dan penggalangan dana secara transparan.</p>
+                    </div>
+                    <div id="public-projects-container">
+                        <!-- Dynamic projects rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Aspirasi -->
+            <div class="app-screen" id="pub-screen-aspirasi">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Kotak Aspirasi Jamaah</h2>
+                        <p>Sampaikan pertanyaan, kritik, atau saran konstruktif demi kemaslahatan pengelolaan kas masjid.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="public-feedback-form" class="responsive-form">
+                                <div class="form-group">
+                                    <label for="feedback-name">Nama Anda (Opsional)</label>
+                                    <input type="text" id="feedback-name" placeholder="Contoh: Ahmad / Hamba Allah">
+                                </div>
+                                <div class="form-group">
+                                    <label for="feedback-phone">No. WhatsApp (Opsional, jika ingin dihubungi)</label>
+                                    <input type="tel" id="feedback-phone" placeholder="Contoh: 08123456789">
+                                </div>
+                                <div class="form-group">
+                                    <label for="feedback-message">Saran / Pesan <span class="required">*</span></label>
+                                    <textarea id="feedback-message" required rows="5" placeholder="Tuliskan masukan Anda di sini..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Kirim Aspirasi</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Nav: Public -->
+            <nav class="bottom-nav" id="bottom-nav-public">
+                <button class="bnav-btn active" data-screen="pub-screen-beranda" data-group="public">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    <span>Beranda</span>
+                </button>
+                <button class="bnav-btn" data-screen="pub-screen-keuangan" data-group="public">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                    <span>Keuangan</span>
+                </button>
+                <button class="bnav-btn" data-screen="pub-screen-program" data-group="public">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L2 12h3v9h14v-9h3L12 3zm0 12.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    <span>Program</span>
+                </button>
+                <button class="bnav-btn" data-screen="pub-screen-aspirasi" data-group="public">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                    <span>Aspirasi</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- =========================================================== -->
+        <!-- ==================== ADMIN LOGIN SCREEN =================== -->
+        <!-- =========================================================== -->
+        <div id="screens-auth" class="screen-group">
+            <div class="app-screen auth-screen active">
+                <div class="auth-box">
+                    <div class="auth-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    </div>
+                    <h2>Autentikasi Pengurus</h2>
+                    <p>Masukkan kata sandi keamanan untuk mengelola keuangan masjid.</p>
+                    <form id="admin-login-form">
+                        <div class="form-group">
+                            <label for="admin-password">Kata Sandi Pengurus</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="admin-password" placeholder="Masukkan kata sandi..." required>
+                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-password', this)" title="Tampilkan/Sembunyikan Sandi">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Masuk Dashboard</button>
+                        <button type="button" id="btn-auth-back" class="btn-text-link">← Kembali ke Halaman Utama</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================== -->
+        <!-- ==================== ADMIN SCREENS ======================== -->
+        <!-- =========================================================== -->
+        <div id="screens-admin" class="screen-group">
+
+            <!-- SCREEN: Input Transaksi -->
+            <div class="app-screen active" id="adm-screen-tx">
+                <div class="screen-content">
+                    <!-- Mini Profile Banner -->
+                    <div class="admin-profile-banner">
+                        <img src="" class="admin-avatar-banner" id="admin-profile-avatar" alt="Avatar Bendahara">
+                        <div class="admin-profile-info">
+                            <span id="admin-profile-name">Bendahara</span>
+                            <small id="admin-profile-role">Pengurus Masjid</small>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 id="tx-form-title">Catat Transaksi Baru</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="admin-tx-form" class="responsive-form">
+                                <div class="form-group">
+                                    <label for="tx-date">Tanggal Transaksi <span class="required">*</span></label>
+                                    <input type="date" id="tx-date" required>
+                                </div>
+                                <div class="form-row-double">
+                                    <div class="form-group">
+                                        <label for="tx-type">Jenis Kas <span class="required">*</span></label>
+                                        <select id="tx-type" required>
+                                            <option value="income">Pemasukan (Uang Masuk)</option>
+                                            <option value="expense">Pengeluaran (Uang Keluar)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tx-storage">Penyimpanan <span class="required">*</span></label>
+                                        <select id="tx-storage" required>
+                                            <option value="cash">Kas Fisik/Tunai</option>
+                                            <option value="bank">Rekening Bank</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="tx-amount">Nominal (Rupiah) <span class="required">*</span></label>
+                                    <div class="input-group-prefix">
+                                        <span class="input-prefix-label">Rp</span>
+                                        <input type="number" id="tx-amount" min="1" placeholder="Masukkan angka saja. Contoh: 100000" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="tx-desc">Deskripsi Keterangan <span class="required">*</span></label>
+                                    <input type="text" id="tx-desc" placeholder="Contoh: Membeli sajadah imam baru 2 pcs" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="tx-receipt">Unggah Bukti Kuitansi / Nota Belanja</label>
+                                    <div class="file-upload-wrapper">
+                                        <input type="file" id="tx-receipt" accept="image/*">
+                                        <div class="file-upload-preview" id="receipt-preview-area">
+                                            <span class="placeholder-text">Seret berkas di sini atau ketuk untuk mengambil foto kuitansi</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions-right">
+                                    <button type="button" id="tx-cancel-btn" class="btn btn-secondary" onclick="resetTxForm()" style="display:none;">✕ Batal Edit</button>
+                                    <button type="submit" id="tx-submit-btn" class="btn btn-primary">Simpan Transaksi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Transaksi -->
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h2>Riwayat Semua Transaksi</h2>
+                            <p style="font-size:0.75rem; color:var(--neutral-500); margin:0;">✏️ edit &nbsp; 🗑️ hapus</p>
+                        </div>
+                        <div class="card-body no-padding table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Deskripsi</th>
+                                        <th>Nominal</th>
+                                        <th>Jenis</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-tx-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Program & Proyek Admin -->
+            <div class="app-screen" id="adm-screen-program">
+                <div class="screen-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Buat Target Pembangunan</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="admin-project-form" class="responsive-form">
+                                <div class="form-group">
+                                    <label for="proj-title">Nama Proyek / Pengadaan <span class="required">*</span></label>
+                                    <input type="text" id="proj-title" placeholder="Contoh: Pembangunan Menara Utara Masjid" required>
+                                </div>
+                                <div class="form-row-double">
+                                    <div class="form-group">
+                                        <label for="proj-target">Target Dana (Rupiah) <span class="required">*</span></label>
+                                        <input type="number" id="proj-target" min="1" placeholder="Contoh: 15000000" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="proj-collected">Dana Terkumpul Awal</label>
+                                        <input type="number" id="proj-collected" min="0" value="0" placeholder="Contoh: 2500000">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="proj-desc">Keterangan / Rincian Rencana</label>
+                                    <textarea id="proj-desc" rows="3" placeholder="Jelaskan kebutuhan penggalangan dana secara ringkas..."></textarea>
+                                </div>
+                                <div class="form-actions-right">
+                                    <button type="submit" class="btn btn-primary">Publikasikan Proyek</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <h2>Daftar Proyek Aktif &amp; Kontrol</h2>
+                        </div>
+                        <div class="card-body no-padding table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Proyek</th>
+                                        <th>Target</th>
+                                        <th>Terkumpul</th>
+                                        <th>Progress</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-projects-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Aspirasi Warga Admin -->
+            <div class="app-screen" id="adm-screen-aspirasi">
+                <div class="screen-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Kotak Aspirasi &amp; Saran Jamaah</h2>
+                            <p>Saran dan masukan yang dikirim oleh masyarakat melalui halaman depan.</p>
+                        </div>
+                        <div class="card-body no-padding" id="admin-feedback-container">
+                            <!-- Dynamic feedback list -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Pengaturan Admin -->
+            <div class="app-screen" id="adm-screen-settings">
+                <div class="screen-content">
+                    <!-- CARD 1: Profil Bendahara -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Profil Bendahara &amp; Informasi Bank</h2>
+                            <p>Kelola profil pengurus dan rekening bank masjid</p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center; margin-bottom:1.25rem;">
+                                <div class="avatar-container" style="width:4.5rem; height:4.5rem; border-radius:50%; overflow:hidden; border:2px solid var(--primary-500); background:var(--neutral-100);">
+                                    <img src="" class="admin-avatar" id="settings-profile-avatar" alt="Avatar Bendahara" style="width:100%; height:100%; object-fit:cover;">
+                                </div>
+                                <div style="flex:1; min-width:160px;">
+                                    <label for="change-admin-avatar" style="font-weight:600; font-size:0.85rem; color:var(--neutral-700); display:block; margin-bottom:0.35rem;">Unggah Foto Profil</label>
+                                    <input type="file" id="change-admin-avatar" accept="image/*" style="display:none;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('change-admin-avatar').click()" style="padding:0.35rem 0.85rem; font-size:0.8rem;">Pilih File Gambar...</button>
+                                    <p class="text-muted" style="font-size:0.685rem; margin-top:0.25rem; margin-bottom:0;">Foto rasio 1:1 (JPG/PNG).</p>
+                                </div>
+                            </div>
+                            <div class="form-row-double">
+                                <div class="form-group">
+                                    <label for="change-admin-name">Nama Bendahara</label>
+                                    <input type="text" id="change-admin-name" placeholder="Contoh: H. Sudirman, S.E.">
+                                </div>
+                                <div class="form-group">
+                                    <label for="change-admin-role">Jabatan / Peran</label>
+                                    <input type="text" id="change-admin-role" placeholder="Contoh: Bendahara Utama">
+                                </div>
+                            </div>
+                            <div class="form-row-double" style="margin-top:0.75rem;">
+                                <div class="form-group">
+                                    <label for="change-bank-name">Nama Bank Masjid</label>
+                                    <input type="text" id="change-bank-name" placeholder="Contoh: BSI">
+                                </div>
+                                <div class="form-group">
+                                    <label for="change-bank-acc">Nomor Rekening</label>
+                                    <input type="text" id="change-bank-acc" placeholder="Contoh: 7123456789">
+                                </div>
+                            </div>
+                            <div class="form-row-double" style="margin-top:0.75rem;">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="change-bank-owner">Atas Nama Rekening</label>
+                                    <input type="text" id="change-bank-owner" placeholder="Contoh: Masjid Raudhatul Khoiriyah">
+                                </div>
+                            </div>
+                            <div class="form-row-double" style="margin-top:0.75rem;">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label for="change-wa-number">No. WhatsApp Pengurus</label>
+                                    <input type="text" id="change-wa-number" placeholder="Contoh: 6281234567890">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="btn-save-profile" style="margin-top:1.25rem; width:100%;">Simpan Perubahan Profil &amp; Bank</button>
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: Keamanan -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Keamanan &amp; Kredensial</h2>
+                            <p>Ubah kata sandi untuk masuk ke dashboard admin</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="change-admin-pw">Ubah Sandi Keamanan Admin</label>
+                                <div class="input-action-row" style="display:flex; gap:0.5rem; width:100%;">
+                                    <div class="password-input-wrapper" style="flex:1;">
+                                        <input type="password" id="change-admin-pw" placeholder="Masukkan kata sandi baru...">
+                                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('change-admin-pw', this)" title="Tampilkan/Sembunyikan Sandi">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <button class="btn btn-secondary" id="btn-save-pw" style="flex-shrink:0;">Simpan Sandi</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 3: QR Code Portal -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>QR Code &amp; Link Akses Masjid</h2>
+                            <p>Cetak QR Code untuk ditempel di mading masjid agar jamaah mudah mengakses</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="qr-print-box text-center" style="display:flex; flex-direction:column; align-items:center; gap:1.25rem;">
+                                <div class="qr-print-poster" id="qr-poster-area">
+                                    <div class="poster-header">
+                                        <img src="assets/logo.png" alt="Logo Masjid" class="poster-logo">
+                                        <h2>PORTAL TRANSPARANSI KEUANGAN</h2>
+                                        <h3>Masjid Raudhatul Khoiriyah</h3>
+                                        <p class="poster-subtitle">Kelurahan Pagar Tengah, Kec. Pendopo</p>
+                                    </div>
+                                    <div class="poster-qr-wrapper">
+                                        <img id="qr-image-src" src="/api/qr" alt="QR Code Akses">
+                                    </div>
+                                    <div class="poster-footer">
+                                        <p class="scan-text">PINDAI QR CODE DI ATAS UNTUK MELIHAT LAPORAN KAS REAL-TIME</p>
+                                        <p class="url-text" id="qr-access-url">http://localhost:3000</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" id="btn-print-qr" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:0.35rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+                                    Cetak QR Code Masjid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 4: Manajemen Data & Backup (Super Admin Only) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Manajemen Data &amp; Backup</h2>
+                            <p>Unduh semua data kas atau reset database ke setelan awal (Khusus Super Admin)</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="settings-actions" style="display:flex; flex-direction:column; gap:0.75rem;">
+                                <button class="btn btn-secondary" id="btn-export-data" style="width:100%; justify-content:center; display:inline-flex; align-items:center; gap:0.35rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                                    Ekspor Backup Data (JSON)
+                                </button>
+                                <button class="btn btn-danger" id="btn-reset-db" style="width:100%; justify-content:center; display:inline-flex; align-items:center; gap:0.35rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                    Format &amp; Reset Data Kas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Nav: Admin -->
+            <nav class="bottom-nav" id="bottom-nav-admin">
+                <button class="bnav-btn active" data-screen="adm-screen-tx" data-group="admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                    <span>Transaksi</span>
+                </button>
+                <button class="bnav-btn" data-screen="adm-screen-program" data-group="admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2v-7h2v7zm4 0h-2v-7h2v7z"/></svg>
+                    <span>Program</span>
+                </button>
+                <button class="bnav-btn" data-screen="adm-screen-aspirasi" data-group="admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                    <span>Aspirasi <span class="badge" id="feedback-badge">0</span></span>
+                </button>
+                <button class="bnav-btn" data-screen="adm-screen-settings" data-group="admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    <span>Pengaturan</span>
+                </button>
+            </nav>
+        </div>
+
+    </div><!-- end .app-shell -->
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Receipt Preview Modal -->
+    <div class="modal" id="modal-receipt">
+        <div class="modal-content">
+            <span class="close-btn" id="close-receipt-modal">&times;</span>
+            <h2>Bukti Fisik Transaksi Keuangan</h2>
+            <p id="receipt-modal-desc" class="text-muted"></p>
+            <div class="receipt-image-container margin-top">
+                <img id="receipt-modal-img" src="" alt="Bukti Transaksi">
+            </div>
+        </div>
+    </div>
+
+    <!-- QRIS Donation Modal -->
+    <div class="modal" id="modal-qris">
+        <div class="modal-content modal-sm">
+            <span class="close-btn" id="close-qris-modal">&times;</span>
+            <div class="qris-header text-center">
+                <h2>QRIS Resmi Masjid</h2>
+                <h3>Raudhatul Khoiriyah</h3>
+                <p>NMID: ID1020263304523</p>
+            </div>
+            <div class="qris-image-wrapper">
+                <div class="qris-frame">
+                    <div class="qris-logo-text">QRIS</div>
+                    <div class="qris-logo-sub">GPN</div>
+                    <div class="qris-qr-code">
+                        <svg viewBox="0 0 100 100" class="qr-svg">
+                            <rect width="100" height="100" fill="white"/>
+                            <rect x="5" y="5" width="25" height="25" fill="#000"/><rect x="9" y="9" width="17" height="17" fill="#fff"/><rect x="13" y="13" width="9" height="9" fill="#000"/>
+                            <rect x="70" y="5" width="25" height="25" fill="#000"/><rect x="74" y="9" width="17" height="17" fill="#fff"/><rect x="78" y="13" width="9" height="9" fill="#000"/>
+                            <rect x="5" y="70" width="25" height="25" fill="#000"/><rect x="9" y="74" width="17" height="17" fill="#fff"/><rect x="13" y="78" width="9" height="9" fill="#000"/>
+                            <rect x="35" y="5" width="5" height="15" fill="#000"/><rect x="45" y="10" width="10" height="5" fill="#000"/>
+                            <rect x="60" y="5" width="5" height="25" fill="#000"/><rect x="35" y="25" width="15" height="5" fill="#000"/>
+                            <rect x="55" y="20" width="5" height="10" fill="#000"/><rect x="5" y="35" width="15" height="5" fill="#000"/>
+                            <rect x="25" y="35" width="10" height="15" fill="#000"/><rect x="40" y="35" width="20" height="5" fill="#000"/>
+                            <rect x="65" y="35" width="5" height="10" fill="#000"/><rect x="75" y="35" width="20" height="5" fill="#000"/>
+                            <rect x="15" y="50" width="5" height="15" fill="#000"/><rect x="25" y="55" width="25" height="5" fill="#000"/>
+                            <rect x="55" y="45" width="10" height="20" fill="#000"/><rect x="70" y="45" width="15" height="5" fill="#000"/>
+                            <rect x="90" y="50" width="5" height="15" fill="#000"/><rect x="35" y="65" width="5" height="20" fill="#000"/>
+                            <rect x="45" y="70" width="15" height="5" fill="#000"/><rect x="65" y="65" width="5" height="10" fill="#000"/>
+                            <rect x="75" y="70" width="20" height="5" fill="#000"/><rect x="35" y="80" width="20" height="5" fill="#000"/>
+                            <rect x="60" y="75" width="5" height="20" fill="#000"/><rect x="70" y="80" width="10" height="15" fill="#000"/>
+                            <rect x="85" y="85" width="10" height="5" fill="#000"/>
+                            <rect x="42" y="42" width="16" height="16" fill="#064e3b" rx="2"/>
+                            <path d="M50 45L45 52H55L50 45Z" fill="#fff"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-block" id="btn-download-qris" style="width:100%; margin-top:1.25rem;">Unduh Gambar QRIS (PNG)</button>
+            <div class="qris-footer text-center margin-top" style="margin-top:1rem;">
+                <p>Mendukung pembayaran dari semua Mobile Banking &amp; E-Wallet (Gopay, OVO, Dana, LinkAja, ShopeePay, dll).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div class="modal" id="modal-confirm" style="z-index: 3100;">
+        <div class="modal-content modal-sm text-center">
+            <div class="confirm-icon" style="width: 48px; height: 48px; background: var(--danger-100); color: var(--danger-600); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--neutral-900);">Konfirmasi Tindakan</h3>
+            <p id="confirm-modal-text" class="text-muted" style="font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.5rem;"></p>
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                <button type="button" class="btn btn-secondary" id="btn-confirm-cancel" style="flex: 1; padding: 0.5rem 1rem; font-size: 0.85rem;">Batal</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-ok" style="flex: 1; padding: 0.5rem 1rem; font-size: 0.85rem;">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Success Alert Modal -->
+    <div class="modal" id="modal-success" style="z-index: 3200;">
+        <div class="modal-content modal-sm text-center">
+            <div class="success-icon-wrapper" style="width: 64px; height: 64px; background: var(--primary-100); color: var(--primary-700); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            </div>
+            <h3 id="success-modal-title" style="margin-bottom: 0.5rem; font-size: 1.2rem; color: var(--neutral-900);">Berhasil!</h3>
+            <p id="success-modal-text" class="text-muted" style="font-size: 0.85rem; line-height: 1.45; margin-bottom: 1.5rem;"></p>
+            <button type="button" class="btn btn-primary" id="btn-success-close" style="width: 100%; padding: 0.6rem 1rem; font-size: 0.9rem; font-weight: 700; border-radius: var(--radius-sm);">Alhamdulillah</button>
+        </div>
+    </div>
+
+    <!-- Hidden Print Report Area -->
+    <div id="print-report-area">
+        <div class="print-kop">
+            <img src="assets/logo.png" alt="Logo Masjid" class="print-kop-logo">
+            <div class="print-kop-text">
+                <h2>MASJID RAUDHATUL KHOIRIYAH</h2>
+                <p>Kelurahan Pagar Tengah, Kecamatan Pendopo, Kabupaten Empat Lawang, Sumatera Selatan</p>
+                <p class="print-kop-sub">Portal Transparansi Keuangan Real-Time</p>
+            </div>
+        </div>
+        <hr class="print-kop-line">
+        <h3 class="print-report-title">LAPORAN REKAPITULASI KAS MASJID</h3>
+        
+        <div class="print-report-meta">
+            <div><strong>Filter Pencarian:</strong> <span id="print-search-label">-</span></div>
+            <div><strong>Tipe Transaksi:</strong> <span id="print-type-label">Semua</span></div>
+            <div><strong>Periode Waktu:</strong> <span id="print-period-label">Semua</span></div>
+            <div><strong>Tanggal Cetak:</strong> <span id="print-date-label">-</span></div>
+        </div>
+        
+        <table class="print-table">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Tanggal</th>
+                    <th>Keterangan / Uraian Transaksi</th>
+                    <th style="width: 15%;">Jenis</th>
+                    <th style="width: 25%; text-align: right;">Nominal (Rp)</th>
+                </tr>
+            </thead>
+            <tbody id="print-report-tbody">
+                <!-- Dynamically populated via JS -->
+            </tbody>
+        </table>
+        
+        <div class="print-summary-box">
+            <div class="summary-row">
+                <span>Total Pemasukan:</span>
+                <strong id="print-total-income" style="color: #047857;">Rp 0</strong>
+            </div>
+            <div class="summary-row">
+                <span>Total Pengeluaran:</span>
+                <strong id="print-total-expense" style="color: #b91c1c;">Rp 0</strong>
+            </div>
+            <div class="summary-row grand-total">
+                <span>Saldo Akhir Kas:</span>
+                <strong id="print-final-balance">Rp 0</strong>
+            </div>
+        </div>
+        
+        <div class="print-signatures">
+            <div class="sig-block">
+                <p>Mengetahui,</p>
+                <p class="sig-role">Ketua Pengurus Masjid</p>
+                <div class="sig-space"></div>
+                <p class="sig-name">______________________</p>
+            </div>
+            <div class="sig-block">
+                <p>Empat Lawang, <span id="print-signature-date">-</span></p>
+                <p class="sig-role" id="print-sig-role">Bendahara Utama</p>
+                <div class="sig-space"></div>
+                <p class="sig-name" id="print-sig-name">H. Sudirman, S.E.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toast-message">Pesan sukses disini</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
