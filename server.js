@@ -35,32 +35,21 @@ function getLocalIpAddress() {
 // Inital seed data for db.json if database doesn't exist
 const initialDbState = {
     transactions: [
-        { id: 'tx-1', date: getRelativeDateString(0), amount: 4850000, type: 'income', description: 'Infak Jumat Terkumpul Utama', storage: 'cash', receipt_url: null },
-        { id: 'tx-2', date: getRelativeDateString(1), amount: 1500000, type: 'expense', description: 'Santunan Anak Yatim Bulanan', storage: 'bank', receipt_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23f1f5f9"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%2364748b">KUITANSI SANTUNAN YATIM</text></svg>' },
-        { id: 'tx-3', date: getRelativeDateString(3), amount: 820000, type: 'expense', description: 'Tagihan Listrik PLN Juni (Operasional)', storage: 'bank', receipt_url: null },
-        { id: 'tx-4', date: getRelativeDateString(4), amount: 3500000, type: 'income', description: 'Transfer Donatur H. Rahman via BSI (Donasi Pembangunan)', storage: 'bank', receipt_url: null },
-        { id: 'tx-5', date: getRelativeDateString(5), amount: 650000, type: 'income', description: 'Rekap Celengan Harian Masjid (Infak)', storage: 'cash', receipt_url: null },
-        { id: 'tx-6', date: getRelativeDateString(7), amount: 1200000, type: 'expense', description: 'Servis AC Ruang Utama 3 unit (Pemeliharaan)', storage: 'cash', receipt_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23f1f5f9"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%2364748b">NOTA SERVIS AC MASJID</text></svg>' },
-        { id: 'tx-7', date: getRelativeDateString(10), amount: 2000000, type: 'expense', description: 'Insentif Bulanan Guru Mengaji & Marbot', storage: 'cash', receipt_url: null },
-        { id: 'tx-m1-1', date: '2026-05-15', amount: 18500000, type: 'income', description: 'Pemasukan Donasi Pembangunan Menara', storage: 'bank', receipt_url: null },
-        { id: 'tx-m1-2', date: '2026-05-20', amount: 9500000, type: 'expense', description: 'Pembelian Semen & Pasir Pembangunan', storage: 'bank', receipt_url: null },
-        { id: 'tx-m2-1', date: '2026-04-10', amount: 12400000, type: 'income', description: 'Total Infak Jumat Bulan April', storage: 'cash', receipt_url: null },
-        { id: 'tx-m2-2', date: '2026-04-18', amount: 4200000, type: 'expense', description: 'Konsumsi Peringatan Nuzulul Quran', storage: 'cash', receipt_url: null },
-        { id: 'tx-m3-1', date: '2026-03-05', amount: 15600000, type: 'income', description: 'Penerimaan Zakat & Infak Ramadan Awal', storage: 'bank', receipt_url: null },
-        { id: 'tx-m3-2', date: '2026-03-25', amount: 8000000, type: 'expense', description: 'Penyaluran Paket Sembako Duafa (Santunan)', storage: 'bank', receipt_url: null },
-        { id: 'tx-m4-1', date: '2026-02-12', amount: 9800000, type: 'income', description: 'Total Rekap Pemasukan Kas Februari (Infak)', storage: 'cash', receipt_url: null },
-        { id: 'tx-m4-2', date: '2026-02-28', amount: 3500000, type: 'expense', description: 'Pengecatan Ulang Dinding Luar Masjid (Pemeliharaan)', storage: 'cash', receipt_url: null },
-        { id: 'tx-m5-1', date: '2026-01-05', amount: 11000000, type: 'income', description: 'Saldo Awal Awal Tahun & Infak', storage: 'bank', receipt_url: null },
-        { id: 'tx-m5-2', date: '2026-01-20', amount: 5000000, type: 'expense', description: 'Perbaikan Kanopi & Parkiran Motor (Pemeliharaan)', storage: 'bank', receipt_url: null }
+        { id: 'tx-demo-1', date: getRelativeDateString(0), amount: 2750000, type: 'income', description: 'Infak Jumat pekan pertama Juli', storage: 'cash', receipt_url: null },
+        { id: 'tx-demo-2', date: getRelativeDateString(1), amount: 1500000, type: 'income', description: 'Transfer donatur untuk program santunan', storage: 'bank', receipt_url: null },
+        { id: 'tx-demo-3', date: getRelativeDateString(2), amount: 420000, type: 'expense', description: 'Pembelian perlengkapan kebersihan masjid', storage: 'cash', receipt_url: null },
+        { id: 'tx-demo-4', date: getRelativeDateString(6), amount: 875000, type: 'expense', description: 'Pembayaran tagihan listrik dan air', storage: 'bank', receipt_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23f1f5f9"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%2364748b">BUKTI PEMBAYARAN UTILITAS</text></svg>' },
+        { id: 'tx-demo-5', date: '2026-05-18', amount: 3200000, type: 'income', description: 'Donasi pembangunan kanopi halaman', storage: 'bank', receipt_url: null }
     ],
     projects: [
-        { id: 'proj-1', title: 'Renovasi Tempat Wudhu Wanita', target_amount: 12000000, collected_amount: 9500000, status: 'active', description: 'Perluasan area wudhu jamaah wanita serta penggantian keramik lantai agar tidak licin.' },
-        { id: 'proj-2', title: 'Pembelian Mobil Ambulans Umat', target_amount: 180000000, collected_amount: 180000000, status: 'completed', description: 'Pengadaan mobil jenazah/ambulans gratis untuk melayani warga kelurahan Pagar Tengah.' },
-        { id: 'proj-3', title: 'Pemasangan Kanopi Halaman Depan', target_amount: 25000000, collected_amount: 3000000, status: 'active', description: 'Pemasangan kanopi tambahan agar jamaah shalat Jumat tidak kepanasan di area pelataran luar.' }
+        { id: 'proj-demo-1', title: 'Perbaikan Sound System Masjid', target_amount: 8500000, collected_amount: 4250000, status: 'active', description: 'Penggantian mixer audio dan beberapa mikrofon agar suara imam serta penceramah lebih jelas.' },
+        { id: 'proj-demo-2', title: 'Program Paket Sembako Jumat Berkah', target_amount: 6000000, collected_amount: 6000000, status: 'completed', description: 'Pengadaan paket sembako untuk warga sekitar masjid yang membutuhkan.' },
+        { id: 'proj-demo-3', title: 'Pengecatan Pagar Depan', target_amount: 4500000, collected_amount: 900000, status: 'active', description: 'Pengecatan ulang pagar depan dan gerbang kecil agar area masjid terlihat lebih rapi.' }
     ],
     feedbacks: [
-        { id: 'fb-1', sender_name: 'Pak Rahmat', phone_number: '08129876543', message: 'Alhamdulillah, laporan keuangannya sangat rapi dan transparan. Kuitansi pengeluaran juga bisa dilihat. Sangat amanah!', status: 'unread', created_at: getRelativeDateString(2) },
-        { id: 'fb-2', sender_name: 'Hamba Allah', phone_number: '', message: 'Mohon info proyek kanopi kapan mulai dikerjakan fisiknya ya pak?', status: 'read', created_at: getRelativeDateString(5) }
+        { id: 'fb-demo-1', sender_name: 'Ibu Sari', phone_number: '081234567890', message: 'Mohon jadwal kerja bakti kebersihan masjid diumumkan lebih awal agar jamaah bisa ikut membantu.', status: 'unread', created_at: getRelativeDateString(0) },
+        { id: 'fb-demo-2', sender_name: 'Hamba Allah', phone_number: '', message: 'Laporan kas sudah mudah dibaca. Semoga fitur bukti transaksi bisa terus dilengkapi.', status: 'read', created_at: getRelativeDateString(3) },
+        { id: 'fb-demo-3', sender_name: 'Pak Dani', phone_number: '085612345678', message: 'Usul agar program perbaikan sound system diprioritaskan sebelum kegiatan pengajian bulanan.', status: 'unread', created_at: getRelativeDateString(5) }
     ],
     adminPassword: 'raudhatul',
     treasurerName: 'H. Sudirman, S.E.',

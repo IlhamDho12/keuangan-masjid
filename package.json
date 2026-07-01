@@ -4,6 +4,7 @@
   "description": "Sistem Informasi Keuangan Masjid Raudhatul Khoiriyah",
   "main": "server.js",
   "scripts": {
+    "build": "node build.js",
     "start": "node server.js"
   },
   "dependencies": {
