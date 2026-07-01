@@ -192,8 +192,7 @@ async function loadState() {
     
     // Once state is loaded, update views
     updateProfileDisplay();
-    // fetchServerInfo(); // Removed as it seems unnecessary unless defined elsewhere. Wait, I will keep it.
-    if (typeof fetchServerInfo === 'function') fetchServerInfo();
+    updateAccessQrCode();
     
     if (state.currentRole === 'admin' && state.isAdminAuthenticated) {
         switchMode('admin');
@@ -268,31 +267,35 @@ function updateProfileDisplay() {
     if (miniNameEl) miniNameEl.textContent = state.treasurerName.split(',')[0];
 }
 
-// Fetch networking details from server to populate QR Code link
-async function fetchServerInfo() {
+function getPublicAccessUrl() {
+    if (window.location.protocol === 'http:' && window.location.hostname === 'localhost') {
+        return window.location.origin;
+    }
+    return 'https://keuangan-masjid-rk.web.app';
+}
+
+async function updateAccessQrCode() {
+    const accessUrl = getPublicAccessUrl();
+    const accessUrlEl = document.getElementById('qr-access-url');
+    const qrImageEl = document.getElementById('qr-image-src');
+
+    if (accessUrlEl) accessUrlEl.textContent = accessUrl;
+    if (!qrImageEl) return;
+
     try {
-        const response = await fetch('/api/info');
-        if (!response.ok) throw new Error('API not available');
-        const info = await response.json();
-        
-        // Update URL texts
-        const accessUrlEl = document.getElementById('qr-access-url');
-        if (accessUrlEl) accessUrlEl.textContent = info.url;
-
-        // Update QR Image source pointing to local server URL
-        const qrImageEl = document.getElementById('qr-image-src');
-        if (qrImageEl) qrImageEl.src = `/api/qr?url=${encodeURIComponent(info.url)}`;
-        
-    } catch (e) {
-        console.warn('Server API unavailable, using current hosting URL for access QR.', e);
-        const currentUrl = window.location.origin || 'https://keuangan-masjid-rk.web.app';
-        const accessUrlEl = document.getElementById('qr-access-url');
-        if (accessUrlEl) accessUrlEl.textContent = currentUrl;
-
-        const qrImageEl = document.getElementById('qr-image-src');
-        if (qrImageEl) {
-            qrImageEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}`;
-        }
+        if (typeof QRCode === 'undefined') throw new Error('QRCode library unavailable');
+        qrImageEl.src = await QRCode.toDataURL(accessUrl, {
+            width: 320,
+            margin: 2,
+            color: {
+                dark: '#0f172a',
+                light: '#ffffff'
+            }
+        });
+    } catch (err) {
+        console.warn('Failed to generate local QR code.', err);
+        qrImageEl.removeAttribute('src');
+        qrImageEl.alt = `QR belum tersedia. Buka: ${accessUrl}`;
     }
 }
 
@@ -1442,7 +1445,7 @@ async function handleAdminLogin(e) {
         state.isAdminAuthenticated = true;
         sessionStorage.setItem('current_role', 'admin');
         pwInput.value = '';
-        await loadState();
+        state.currentRole = 'admin';
         switchMode('admin');
         showToast('Login berhasil! Selamat datang Pengurus Masjid.');
     } catch (err) {
@@ -1705,6 +1708,21 @@ function runNativePrint(printClassName) {
     } else {
         setTimeout(openPrintDialog, 150);
     }
+}
+
+async function printAccessQr() {
+    await updateAccessQrCode();
+    const qrImageEl = document.getElementById('qr-image-src');
+
+    if (qrImageEl?.src && !qrImageEl.complete) {
+        await new Promise((resolve) => {
+            qrImageEl.onload = resolve;
+            qrImageEl.onerror = resolve;
+            setTimeout(resolve, 1500);
+        });
+    }
+
+    runNativePrint('printing-qr');
 }
 
 // Generate and print transaction report based on active user filters
@@ -1971,9 +1989,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-export-data').addEventListener('click', exportDataBackup);
     document.getElementById('btn-reset-db').addEventListener('click', formatDatabase);
     document.getElementById('btn-save-profile').addEventListener('click', handleSaveProfile);
-    document.getElementById('btn-print-qr').addEventListener('click', () => {
-        runNativePrint('printing-qr');
-    });
+    document.getElementById('btn-print-qr').addEventListener('click', printAccessQr);
     
     const printReportBtn = document.getElementById('btn-print-report');
     if (printReportBtn) {
