@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['redhoi73@gmail.com'];
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingsId} {
+      allow read: if settingsId == 'main';
+      allow write: if isAdmin();
+    }
+
+    match /feedbacks/{feedbackId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          'sender_name',
+          'phone_number',
+          'message',
+          'status',
+          'created_at'
+        ])
+        && request.resource.data.sender_name is string
+        && request.resource.data.sender_name.size() <= 80
+        && request.resource.data.phone_number is string
+        && request.resource.data.phone_number.size() <= 30
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 1
+        && request.resource.data.message.size() <= 1000
+        && request.resource.data.status == 'unread'
+        && request.resource.data.created_at is string;
+
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

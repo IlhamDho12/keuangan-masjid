@@ -1,3 +1,28 @@
+// ================= FIREBASE CONFIG =================
+const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyBgO3NzTYlwCtTERQQ5tXN41CkSMRM_gmc',
+    authDomain: 'keuangan-masjid-rk.firebaseapp.com',
+    projectId: 'keuangan-masjid-rk',
+    storageBucket: 'keuangan-masjid-rk.firebasestorage.app',
+    messagingSenderId: '777548315983',
+    appId: '1:777548315983:web:d61cc7602e211088c8d93a'
+};
+
+const ADMIN_EMAILS = ['redhoi73@gmail.com'];
+const APP_SETTINGS_DOC = 'main';
+
+let firebaseApp = null;
+let firestoreDb = null;
+let firebaseAuth = null;
+let firebaseReady = false;
+
+if (typeof firebase !== 'undefined') {
+    firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+    firestoreDb = firebase.firestore();
+    firebaseAuth = firebase.auth();
+    firebaseReady = true;
+}
+
 // ================= INITIAL SEED DATA =================
 // Helper to generate dates relative to today
 const getRelativeDateString = (daysAgo) => {
@@ -31,101 +56,130 @@ let state = {
     transactions: [],
     projects: [],
     feedbacks: [],
-    adminPassword: 'raudhatul',
-    treasurerName: 'H. Sudirman, S.E.',
-    treasurerRole: 'Bendahara Utama',
+    treasurerName: 'Ardi Toher',
+    treasurerRole: 'Bendahara',
     treasurerAvatar: '',
-    bankName: 'BSI',
-    bankAccountNumber: '7123456789',
+    bankName: 'Bri',
+    bankAccountNumber: '71234567890',
     bankAccountHolder: 'Masjid Raudhatul Khoiriyah',
-    whatsappNumber: '6281234567890',
-    isAdminAuthenticated: sessionStorage.getItem('is_admin_authenticated') === 'true',
+    whatsappNumber: '6285369463373',
+    isAdminAuthenticated: false,
     currentRole: sessionStorage.getItem('current_role') || 'public', // 'public' | 'admin'
     activeAdminTab: 'adm-screen-tx',
     editingTxId: null,
     tempReceiptBase64: null
 };
 
-// Save state (try Server, fallback to LocalStorage)
+function isAdminUser(user) {
+    return !!user && ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+}
+
+function getSettingsState() {
+    return {
+        treasurerName: state.treasurerName,
+        treasurerRole: state.treasurerRole,
+        treasurerAvatar: state.treasurerAvatar,
+        bankName: state.bankName,
+        bankAccountNumber: state.bankAccountNumber,
+        bankAccountHolder: state.bankAccountHolder,
+        whatsappNumber: state.whatsappNumber
+    };
+}
+
+function getFullStateSnapshot() {
+    return {
+        transactions: state.transactions,
+        projects: state.projects,
+        feedbacks: state.feedbacks,
+        ...getSettingsState()
+    };
+}
+
+function applyLoadedState(parsed, includeFeedbacks = true) {
+    state.transactions = parsed.transactions || INITIAL_TRANSACTIONS;
+    state.projects = parsed.projects || INITIAL_PROJECTS;
+    if (includeFeedbacks) state.feedbacks = parsed.feedbacks || [];
+    state.treasurerName = parsed.treasurerName || 'Ardi Toher';
+    state.treasurerRole = parsed.treasurerRole || 'Bendahara';
+    state.treasurerAvatar = parsed.treasurerAvatar || '';
+    state.bankName = parsed.bankName || 'Bri';
+    state.bankAccountNumber = parsed.bankAccountNumber || '71234567890';
+    state.bankAccountHolder = parsed.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
+    state.whatsappNumber = parsed.whatsappNumber || '6285369463373';
+}
+
+async function getCollectionData(collectionName) {
+    const snapshot = await firestoreDb.collection(collectionName).get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function replaceCollection(batch, collectionName, items) {
+    const collectionRef = firestoreDb.collection(collectionName);
+    const existing = await collectionRef.get();
+    const nextIds = new Set(items.map(item => item.id));
+
+    existing.docs.forEach(doc => {
+        if (!nextIds.has(doc.id)) batch.delete(doc.ref);
+    });
+
+    items.forEach(item => {
+        const { id, ...payload } = item;
+        batch.set(collectionRef.doc(id), payload);
+    });
+}
+
+async function loadStateFromFirestore(includeFeedbacks) {
+    const [transactions, projects, settingsDoc] = await Promise.all([
+        getCollectionData('transactions'),
+        getCollectionData('projects'),
+        firestoreDb.collection('settings').doc(APP_SETTINGS_DOC).get()
+    ]);
+
+    let feedbacks = [];
+    if (includeFeedbacks) {
+        feedbacks = await getCollectionData('feedbacks');
+    }
+
+    applyLoadedState({
+        transactions: transactions.length ? transactions : INITIAL_TRANSACTIONS,
+        projects: projects.length ? projects : INITIAL_PROJECTS,
+        feedbacks,
+        ...(settingsDoc.exists ? settingsDoc.data() : {})
+    }, includeFeedbacks);
+}
+
+// Save state to Firestore, with localStorage fallback for offline preview.
 async function saveState() {
     try {
-        const response = await fetch('/api/state', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                transactions: state.transactions,
-                projects: state.projects,
-                feedbacks: state.feedbacks,
-                adminPassword: state.adminPassword,
-                treasurerName: state.treasurerName,
-                treasurerRole: state.treasurerRole,
-                treasurerAvatar: state.treasurerAvatar,
-                bankName: state.bankName,
-                bankAccountNumber: state.bankAccountNumber,
-                bankAccountHolder: state.bankAccountHolder,
-                whatsappNumber: state.whatsappNumber
-            })
-        });
-        if (!response.ok) throw new Error('Server response not ok');
-        console.log('State saved to server successfully.');
+        if (!firebaseReady || !state.isAdminAuthenticated) throw new Error('Firestore admin write unavailable');
+
+        const batch = firestoreDb.batch();
+        await replaceCollection(batch, 'transactions', state.transactions);
+        await replaceCollection(batch, 'projects', state.projects);
+        await replaceCollection(batch, 'feedbacks', state.feedbacks);
+        batch.set(firestoreDb.collection('settings').doc(APP_SETTINGS_DOC), getSettingsState());
+        await batch.commit();
+        console.log('State saved to Firestore successfully.');
     } catch (e) {
-        console.warn('Server offline, saving state to LocalStorage as fallback.', e);
-        // Fallback
-        localStorage.setItem('masjid_finance_state_v3', JSON.stringify({
-            transactions: state.transactions,
-            projects: state.projects,
-            feedbacks: state.feedbacks,
-            adminPassword: state.adminPassword,
-            treasurerName: state.treasurerName,
-            treasurerRole: state.treasurerRole,
-            treasurerAvatar: state.treasurerAvatar,
-            bankName: state.bankName,
-            bankAccountNumber: state.bankAccountNumber,
-            bankAccountHolder: state.bankAccountHolder,
-            whatsappNumber: state.whatsappNumber
-        }));
+        console.warn('Firestore unavailable, saving state to localStorage fallback.', e);
+        localStorage.setItem('masjid_finance_state_v4', JSON.stringify(getFullStateSnapshot()));
     }
 }
 
-// Load state (try Server, fallback to LocalStorage or seed data)
+// Load state from Firestore, with localStorage/seed fallback for local preview.
 async function loadState() {
+    const canReadPrivateData = state.isAdminAuthenticated;
     try {
-        const response = await fetch('/api/state');
-        if (!response.ok) throw new Error('Server response not ok');
-        const parsed = await response.json();
-        
-        state.transactions = parsed.transactions || INITIAL_TRANSACTIONS;
-        state.projects = parsed.projects || INITIAL_PROJECTS;
-        state.feedbacks = parsed.feedbacks || INITIAL_FEEDBACKS;
-        state.adminPassword = parsed.adminPassword || 'raudhatul';
-        state.treasurerName = parsed.treasurerName || 'H. Sudirman, S.E.';
-        state.treasurerRole = parsed.treasurerRole || 'Bendahara Utama';
-        state.treasurerAvatar = parsed.treasurerAvatar || '';
-        state.bankName = parsed.bankName || 'BSI';
-        state.bankAccountNumber = parsed.bankAccountNumber || '7123456789';
-        state.bankAccountHolder = parsed.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
-        state.whatsappNumber = parsed.whatsappNumber || '6281234567890';
-        
-        console.log('State loaded from server successfully.');
+        if (!firebaseReady) throw new Error('Firebase SDK unavailable');
+        await loadStateFromFirestore(canReadPrivateData);
+        console.log('State loaded from Firestore successfully.');
     } catch (e) {
-        console.warn('Server offline, loading state from LocalStorage.', e);
-        const localData = localStorage.getItem('masjid_finance_state_v3');
+        console.warn('Firestore unavailable, loading fallback state.', e);
+        const localData = localStorage.getItem('masjid_finance_state_v4') || localStorage.getItem('masjid_finance_state_v3');
         if (localData) {
             try {
                 const parsed = JSON.parse(localData);
-                state.transactions = parsed.transactions || INITIAL_TRANSACTIONS;
-                state.projects = parsed.projects || INITIAL_PROJECTS;
-                state.feedbacks = parsed.feedbacks || INITIAL_FEEDBACKS;
-                state.adminPassword = parsed.adminPassword || 'raudhatul';
-                state.treasurerName = parsed.treasurerName || 'H. Sudirman, S.E.';
-                state.treasurerRole = parsed.treasurerRole || 'Bendahara Utama';
-                state.treasurerAvatar = parsed.treasurerAvatar || '';
-                state.bankName = parsed.bankName || 'BSI';
-                state.bankAccountNumber = parsed.bankAccountNumber || '7123456789';
-                state.bankAccountHolder = parsed.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
-                state.whatsappNumber = parsed.whatsappNumber || '6281234567890';
+                applyLoadedState(parsed, true);
             } catch (err) {
                 console.error("Error parsing localStorage data, resetting to seed data", err);
                 resetToInitialData();
@@ -152,14 +206,13 @@ function resetToInitialData() {
     state.transactions = [...INITIAL_TRANSACTIONS];
     state.projects = [...INITIAL_PROJECTS];
     state.feedbacks = [...INITIAL_FEEDBACKS];
-    state.adminPassword = 'raudhatul';
-    state.treasurerName = 'H. Sudirman, S.E.';
-    state.treasurerRole = 'Bendahara Utama';
+    state.treasurerName = 'Ardi Toher';
+    state.treasurerRole = 'Bendahara';
     state.treasurerAvatar = '';
-    state.bankName = 'BSI';
-    state.bankAccountNumber = '7123456789';
+    state.bankName = 'Bri';
+    state.bankAccountNumber = '71234567890';
     state.bankAccountHolder = 'Masjid Raudhatul Khoiriyah';
-    state.whatsappNumber = '6281234567890';
+    state.whatsappNumber = '6285369463373';
     saveState();
 }
 
@@ -230,9 +283,15 @@ async function fetchServerInfo() {
         if (qrImageEl) qrImageEl.src = `/api/qr?url=${encodeURIComponent(info.url)}`;
         
     } catch (e) {
-        console.warn('Server offline, showing fallback localhost QR Code link.', e);
+        console.warn('Server API unavailable, using current hosting URL for access QR.', e);
+        const currentUrl = window.location.origin || 'https://keuangan-masjid-rk.web.app';
         const accessUrlEl = document.getElementById('qr-access-url');
-        if (accessUrlEl) accessUrlEl.textContent = 'http://localhost:3000';
+        if (accessUrlEl) accessUrlEl.textContent = currentUrl;
+
+        const qrImageEl = document.getElementById('qr-image-src');
+        if (qrImageEl) {
+            qrImageEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentUrl)}`;
+        }
     }
 }
 
@@ -813,7 +872,7 @@ window.viewReceipt = function(txId) {
 };
 
 // Handle Public Feedback submission
-function handlePublicFeedbackSubmit(e) {
+async function handlePublicFeedbackSubmit(e) {
     e.preventDefault();
     const nameInput = document.getElementById('feedback-name');
     const phoneInput = document.getElementById('feedback-phone');
@@ -835,7 +894,19 @@ function handlePublicFeedbackSubmit(e) {
     };
 
     state.feedbacks.push(newFeedback);
-    saveState();
+
+    try {
+        if (firebaseReady) {
+            const { id, ...payload } = newFeedback;
+            await firestoreDb.collection('feedbacks').doc(id).set(payload);
+        } else {
+            await saveState();
+        }
+    } catch (err) {
+        console.error('Failed to submit feedback', err);
+        showToast('Aspirasi belum berhasil terkirim. Silakan coba lagi.', 'error');
+        return;
+    }
 
     // Clear form
     nameInput.value = '';
@@ -1323,21 +1394,34 @@ window.deleteFeedback = function(id) {
 };
 
 // ================= ADMIN LOGIN & AUTHENTICATION =================
-function handleAdminLogin(e) {
+async function handleAdminLogin(e) {
     e.preventDefault();
+    const emailInput = document.getElementById('admin-email');
     const pwInput = document.getElementById('admin-password');
+    const emailVal = emailInput.value.trim().toLowerCase();
     const pwVal = pwInput.value;
 
-    if (pwVal === state.adminPassword) {
+    if (!firebaseReady) {
+        showToast('Firebase belum siap. Periksa koneksi internet lalu coba lagi.', 'error');
+        return;
+    }
+
+    try {
+        const credential = await firebaseAuth.signInWithEmailAndPassword(emailVal, pwVal);
+        if (!isAdminUser(credential.user)) {
+            await firebaseAuth.signOut();
+            throw new Error('Akun ini belum terdaftar sebagai admin sistem.');
+        }
+
         state.isAdminAuthenticated = true;
-        sessionStorage.setItem('is_admin_authenticated', 'true');
         sessionStorage.setItem('current_role', 'admin');
         pwInput.value = '';
-        
+        await loadState();
         switchMode('admin');
         showToast('Login berhasil! Selamat datang Pengurus Masjid.');
-    } else {
-        showToast('Kata sandi keamanan salah! Silakan coba lagi.', 'error');
+    } catch (err) {
+        console.error('Admin login failed', err);
+        showToast('Login admin gagal. Periksa email, sandi, dan status Auth Firebase.', 'error');
         pwInput.focus();
         pwInput.select();
     }
@@ -1380,11 +1464,12 @@ function handleSaveProfile() {
 }
 
 function handleAdminLogout() {
-    showConfirm('Apakah Anda yakin ingin keluar dari dashboard pengurus?', () => {
+    showConfirm('Apakah Anda yakin ingin keluar dari dashboard pengurus?', async () => {
+        if (firebaseReady) await firebaseAuth.signOut();
         state.isAdminAuthenticated = false;
         state.currentRole = 'public';
-        sessionStorage.removeItem('is_admin_authenticated');
         sessionStorage.removeItem('current_role');
+        state.feedbacks = [];
         switchMode('public');
         showToast('Berhasil keluar dari dashboard pengurus.');
     }, 'Ya, Keluar', true);
@@ -1393,7 +1478,7 @@ function handleAdminLogout() {
 // ================= SETTINGS & BACKUP ACTIONS =================
 
 // Change Password
-function handleChangePassword() {
+async function handleChangePassword() {
     const pwInput = document.getElementById('change-admin-pw');
     const newPw = pwInput.value.trim();
 
@@ -1402,11 +1487,16 @@ function handleChangePassword() {
         return;
     }
 
-    showConfirm('Apakah Anda yakin ingin mengubah kata sandi keamanan admin?', () => {
-        state.adminPassword = newPw;
-        saveState();
-        pwInput.value = '';
-        showSuccess('Sandi Keamanan Diubah!', 'Alhamdulillah, kata sandi keamanan pengurus masjid berhasil diperbarui.');
+    showConfirm('Apakah Anda yakin ingin mengubah kata sandi keamanan admin?', async () => {
+        try {
+            if (!firebaseReady || !firebaseAuth.currentUser) throw new Error('Admin belum login.');
+            await firebaseAuth.currentUser.updatePassword(newPw);
+            pwInput.value = '';
+            showSuccess('Sandi Keamanan Diubah!', 'Alhamdulillah, kata sandi keamanan pengurus masjid berhasil diperbarui.');
+        } catch (err) {
+            console.error('Failed to change password', err);
+            showToast('Sandi belum berhasil diubah. Login ulang lalu coba lagi.', 'error');
+        }
     }, 'Ya, Ubah', false);
 }
 
@@ -1416,7 +1506,7 @@ function exportDataBackup() {
         transactions: state.transactions,
         projects: state.projects,
         feedbacks: state.feedbacks,
-        adminPassword: state.adminPassword,
+        settings: getSettingsState(),
         export_date: new Date().toISOString()
     };
 
@@ -1706,6 +1796,31 @@ window.togglePasswordVisibility = function(inputId, btnEl) {
 
 // ================= EVENT LISTENER INITIALIZATIONS =================
 document.addEventListener('DOMContentLoaded', () => {
+    const adminEmailInput = document.getElementById('admin-email');
+    if (adminEmailInput && ADMIN_EMAILS.length) {
+        adminEmailInput.value = ADMIN_EMAILS[0];
+    }
+
+    if (firebaseReady) {
+        firebaseAuth.onAuthStateChanged(async (user) => {
+            const authenticated = isAdminUser(user);
+            state.isAdminAuthenticated = authenticated;
+
+            if (!authenticated && state.currentRole === 'admin') {
+                state.currentRole = 'public';
+                sessionStorage.removeItem('current_role');
+                state.feedbacks = [];
+                switchMode('public');
+                return;
+            }
+
+            if (authenticated && state.currentRole === 'admin') {
+                await loadState();
+                switchMode('admin');
+            }
+        });
+    }
+
     // 1. Load data — loadState() is async and will call renderPublicView() internally after data loads
     loadState();
 
