@@ -1264,13 +1264,16 @@ function renderAdminProjectsTab() {
 // Project Actions
 window.completeProject = function(id) {
     const proj = state.projects.find(p => p.id === id);
-    if (proj) {
+    if (!proj) return;
+
+    showConfirm(`Tandai proyek "${proj.title}" sebagai selesai? Nominal terkumpul akan disamakan dengan target anggaran.`, () => {
         proj.status = 'completed';
         proj.collected_amount = proj.target_amount; // Set full collected
         saveState();
         renderAdminDashboard();
-        showToast('Proyek dinyatakan selesai & sukses!');
-    }
+        renderPublicView();
+        showSuccess('Proyek Selesai!', 'Program pembangunan telah ditandai selesai dan progresnya diperbarui menjadi 100%.');
+    }, 'Ya, Selesaikan', false);
 };
 
 window.deleteProject = function(id) {
