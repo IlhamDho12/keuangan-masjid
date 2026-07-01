@@ -1395,13 +1395,40 @@ window.deleteFeedback = function(id) {
 };
 
 // ================= ADMIN LOGIN & AUTHENTICATION =================
+function showLoginError(message) {
+    const authBox = document.querySelector('.auth-box');
+    const errorEl = document.getElementById('admin-login-error');
+    const pwInput = document.getElementById('admin-password');
+
+    if (errorEl) errorEl.textContent = message;
+    if (authBox) {
+        authBox.classList.remove('login-error');
+        void authBox.offsetWidth;
+        authBox.classList.add('login-error');
+    }
+    if (pwInput) {
+        pwInput.focus();
+        pwInput.select();
+    }
+}
+
+function clearLoginError() {
+    const authBox = document.querySelector('.auth-box');
+    const errorEl = document.getElementById('admin-login-error');
+
+    if (authBox) authBox.classList.remove('login-error');
+    if (errorEl) errorEl.textContent = '';
+}
+
 async function handleAdminLogin(e) {
     e.preventDefault();
     const pwInput = document.getElementById('admin-password');
     const pwVal = pwInput.value;
 
+    clearLoginError();
+
     if (!firebaseReady) {
-        showToast('Firebase belum siap. Periksa koneksi internet lalu coba lagi.', 'error');
+        showLoginError('Firebase belum siap. Periksa koneksi internet lalu coba lagi.');
         return;
     }
 
@@ -1420,9 +1447,11 @@ async function handleAdminLogin(e) {
         showToast('Login berhasil! Selamat datang Pengurus Masjid.');
     } catch (err) {
         console.error('Admin login failed', err);
-        showToast('Login admin gagal. Periksa email, sandi, dan status Auth Firebase.', 'error');
-        pwInput.focus();
-        pwInput.select();
+        const authMessage = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password'
+            ? 'PIN atau kata sandi salah.'
+            : 'Login gagal. Coba ulang atau refresh halaman.';
+        showLoginError(authMessage);
+        showToast(authMessage, 'error');
     }
 }
 
@@ -1869,6 +1898,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 8. Admin login and logout
     document.getElementById('admin-login-form').addEventListener('submit', handleAdminLogin);
+    document.getElementById('admin-password').addEventListener('input', clearLoginError);
     document.getElementById('btn-admin-logout').addEventListener('click', handleAdminLogout);
 
     // 9. Bottom Navigation Tabs
