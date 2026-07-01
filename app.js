@@ -21,6 +21,9 @@ if (typeof firebase !== 'undefined') {
     firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
     firestoreDb = firebase.firestore();
     firebaseAuth = firebase.auth();
+    firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => {
+        console.warn('Gagal mengatur session login:', error);
+    });
     firebaseReady = true;
 }
 
@@ -1757,6 +1760,66 @@ async function printAccessQr() {
     runNativePrint('printing-qr');
 }
 
+async function downloadAccessQrPdf() {
+    await updateAccessQrCode();
+
+    const qrImageEl = document.getElementById('qr-image-src');
+    const qrDataUrl = qrImageEl?.src;
+    const jsPdfCtor = window.jspdf?.jsPDF;
+
+    if (!qrDataUrl || !jsPdfCtor) {
+        showToast('PDF belum bisa dibuat. Coba refresh halaman lalu ulangi.', 'error');
+        return;
+    }
+
+    const accessUrl = getPublicAccessUrl();
+    const pdf = new jsPdfCtor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const centerX = pageWidth / 2;
+
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(0, 0, 210, 297, 'F');
+
+    pdf.setTextColor(15, 23, 42);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.text('PORTAL TRANSPARANSI KEUANGAN', centerX, 38, { align: 'center' });
+    pdf.setFontSize(16);
+    pdf.text('Masjid Raudhatul Khoiriyah', centerX, 49, { align: 'center' });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    pdf.setTextColor(71, 85, 105);
+    pdf.text('Kelurahan Pagar Tengah, Kec. Pendopo', centerX, 57, { align: 'center' });
+
+    pdf.setDrawColor(203, 213, 225);
+    pdf.setLineWidth(0.4);
+    pdf.roundedRect(55, 72, 100, 100, 4, 4);
+    pdf.addImage(qrDataUrl, 'PNG', 62, 79, 86, 86);
+
+    pdf.setTextColor(15, 23, 42);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text('PINDAI QR CODE DI ATAS UNTUK MELIHAT LAPORAN KAS REAL-TIME', centerX, 192, {
+        align: 'center',
+        maxWidth: 160
+    });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(5, 150, 105);
+    pdf.setFontSize(10);
+    pdf.text(accessUrl, centerX, 205, { align: 'center' });
+
+    pdf.setDrawColor(5, 150, 105);
+    pdf.setLineWidth(0.4);
+    pdf.line(35, 216, 175, 216);
+
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFontSize(9);
+    pdf.text('Laporan kas dapat diakses oleh jamaah secara online.', centerX, 226, { align: 'center' });
+    pdf.save('Poster_QR_Keuangan_Masjid_Raudhatul_Khoiriyah.pdf');
+}
+
 // Generate and print transaction report based on active user filters
 function printFilteredReport() {
     // Get filter input elements
@@ -2022,6 +2085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-reset-db').addEventListener('click', formatDatabase);
     document.getElementById('btn-save-profile').addEventListener('click', handleSaveProfile);
     document.getElementById('btn-print-qr').addEventListener('click', printAccessQr);
+    document.getElementById('btn-download-qr-pdf').addEventListener('click', downloadAccessQrPdf);
     
     const printReportBtn = document.getElementById('btn-print-report');
     if (printReportBtn) {
