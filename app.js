@@ -11,6 +11,8 @@ const FIREBASE_CONFIG = {
 const ADMIN_LOGIN_EMAIL = '2010802002@radenfatah.ac.id';
 const ADMIN_EMAILS = [ADMIN_LOGIN_EMAIL];
 const APP_SETTINGS_DOC = 'main';
+const PUBLIC_ACCESS_URL = 'https://keuangan-masjid-rk.web.app';
+const PUBLIC_ACCESS_QR_SRC = 'assets/access-qr.png?v=20260701';
 
 let firebaseApp = null;
 let firestoreDb = null;
@@ -271,10 +273,7 @@ function updateProfileDisplay() {
 }
 
 function getPublicAccessUrl() {
-    if (window.location.protocol === 'http:' && window.location.hostname === 'localhost') {
-        return window.location.origin;
-    }
-    return 'https://keuangan-masjid-rk.web.app';
+    return PUBLIC_ACCESS_URL;
 }
 
 async function updateAccessQrCode() {
@@ -286,20 +285,35 @@ async function updateAccessQrCode() {
     if (!qrImageEl) return;
 
     try {
-        if (typeof QRCode === 'undefined') throw new Error('QRCode library unavailable');
-        qrImageEl.src = await QRCode.toDataURL(accessUrl, {
-            width: 320,
-            margin: 2,
-            color: {
-                dark: '#0f172a',
-                light: '#ffffff'
-            }
-        });
+        qrImageEl.alt = `QR Code akses ${accessUrl}`;
+        qrImageEl.src = PUBLIC_ACCESS_QR_SRC;
     } catch (err) {
-        console.warn('Failed to generate local QR code.', err);
+        console.warn('Failed to load QR code.', err);
         qrImageEl.removeAttribute('src');
         qrImageEl.alt = `QR belum tersedia. Buka: ${accessUrl}`;
     }
+}
+
+async function getImageDataUrl(imageEl) {
+    if (!imageEl?.src) return '';
+    if (imageEl.src.startsWith('data:image')) return imageEl.src;
+
+    if (!imageEl.complete || imageEl.naturalWidth === 0) {
+        await new Promise((resolve) => {
+            imageEl.onload = resolve;
+            imageEl.onerror = resolve;
+            setTimeout(resolve, 2500);
+        });
+    }
+
+    if (!imageEl.naturalWidth || !imageEl.naturalHeight) return '';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = imageEl.naturalWidth;
+    canvas.height = imageEl.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imageEl, 0, 0);
+    return canvas.toDataURL('image/png');
 }
 
 // ================= CORE UI CONTROLLERS =================
@@ -1764,7 +1778,7 @@ async function downloadAccessQrPdf() {
     await updateAccessQrCode();
 
     const qrImageEl = document.getElementById('qr-image-src');
-    const qrDataUrl = qrImageEl?.src;
+    const qrDataUrl = await getImageDataUrl(qrImageEl);
     const jsPdfCtor = window.jspdf?.jsPDF;
 
     if (!qrDataUrl || !jsPdfCtor) {
@@ -1818,6 +1832,7 @@ async function downloadAccessQrPdf() {
     pdf.setFontSize(9);
     pdf.text('Laporan kas dapat diakses oleh jamaah secara online.', centerX, 226, { align: 'center' });
     pdf.save('Poster_QR_Keuangan_Masjid_Raudhatul_Khoiriyah.pdf');
+    showToast('Poster QR PDF berhasil diunduh.');
 }
 
 // Generate and print transaction report based on active user filters

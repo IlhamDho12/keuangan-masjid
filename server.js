@@ -11,6 +11,7 @@ app.use(express.json({ limit: '10mb' }));
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname)));
+app.use('/vendor', express.static(path.join(__dirname, 'node_modules', 'jspdf', 'dist')));
 
 // DB Path setup
 const DB_DIR = path.join(__dirname, 'data');
