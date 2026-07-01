@@ -1408,6 +1408,7 @@ function showLoginError(message) {
         authBox.classList.remove('login-error');
         void authBox.offsetWidth;
         authBox.classList.add('login-error');
+        setTimeout(() => authBox.classList.remove('login-error'), 520);
     }
     if (pwInput) {
         pwInput.focus();
@@ -1423,6 +1424,25 @@ function clearLoginError() {
     if (errorEl) errorEl.textContent = '';
 }
 
+function setLoginLoading(isLoading) {
+    const submitBtn = document.querySelector('#admin-login-form button[type="submit"]');
+    const pwInput = document.getElementById('admin-password');
+
+    if (!submitBtn) return;
+    if (isLoading) {
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Memeriksa...';
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+        if (pwInput) pwInput.disabled = true;
+    } else {
+        submitBtn.textContent = submitBtn.dataset.originalText || 'Masuk Dashboard';
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+        if (pwInput) pwInput.disabled = false;
+    }
+}
+
 async function handleAdminLogin(e) {
     e.preventDefault();
     const pwInput = document.getElementById('admin-password');
@@ -1435,6 +1455,7 @@ async function handleAdminLogin(e) {
         return;
     }
 
+    setLoginLoading(true);
     try {
         const credential = await firebaseAuth.signInWithEmailAndPassword(ADMIN_LOGIN_EMAIL, pwVal);
         if (!isAdminUser(credential.user)) {
@@ -1455,6 +1476,8 @@ async function handleAdminLogin(e) {
             : 'Login gagal. Coba ulang atau refresh halaman.';
         showLoginError(authMessage);
         showToast(authMessage, 'error');
+    } finally {
+        setLoginLoading(false);
     }
 }
 
@@ -1713,6 +1736,8 @@ function runNativePrint(printClassName) {
 async function printAccessQr() {
     await updateAccessQrCode();
     const qrImageEl = document.getElementById('qr-image-src');
+    const sourcePoster = document.getElementById('qr-poster-area');
+    const printPage = document.getElementById('qr-print-page');
 
     if (qrImageEl?.src && !qrImageEl.complete) {
         await new Promise((resolve) => {
@@ -1720,6 +1745,13 @@ async function printAccessQr() {
             qrImageEl.onerror = resolve;
             setTimeout(resolve, 1500);
         });
+    }
+
+    if (sourcePoster && printPage) {
+        printPage.innerHTML = '';
+        const clonedPoster = sourcePoster.cloneNode(true);
+        clonedPoster.removeAttribute('id');
+        printPage.appendChild(clonedPoster);
     }
 
     runNativePrint('printing-qr');

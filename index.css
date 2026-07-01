@@ -520,6 +520,8 @@ input:focus, select:focus, textarea:focus {
 .auth-box.login-error { animation: loginShake 0.42s ease both; }
 .auth-box.login-error #admin-password { border-color: var(--danger-600); box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12); }
 .form-error-message { min-height: 1.1rem; margin: 0.45rem 0 0; color: var(--danger-600); font-size: 0.76rem; font-weight: 700; text-align: left; }
+.btn.loading { opacity: 0.82; cursor: wait; }
+.btn.loading::before { content: ""; width: 0.85rem; height: 0.85rem; border: 2px solid rgba(255,255,255,0.45); border-top-color: #fff; border-radius: 999px; animation: spin 0.75s linear infinite; }
 @keyframes loginShake {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-8px); }
@@ -527,6 +529,7 @@ input:focus, select:focus, textarea:focus {
     60% { transform: translateX(-5px); }
     80% { transform: translateX(4px); }
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Modals */
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15,23,42,0.8); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem; }
@@ -706,6 +709,9 @@ input:focus, select:focus, textarea:focus {
 #print-report-area {
     display: none;
 }
+#qr-print-page {
+    display: none;
+}
 
 @media print {
     @page {
@@ -729,30 +735,27 @@ input:focus, select:focus, textarea:focus {
         print-color-adjust: exact !important;
     }
 
-    /* Hide everything except the specific print target */
-    body.printing-qr #app-header,
-    body.printing-qr #screens-public,
-    body.printing-qr #screens-admin,
-    body.printing-qr #screens-auth,
-    body.printing-qr .bottom-nav,
-    body.printing-qr .modal,
-    body.printing-qr #toast,
-    body.printing-qr #btn-go-admin,
-    body.printing-qr #print-report-area {
+    body.printing-qr > *:not(#qr-print-page) {
         display: none !important;
     }
 
-    body.printing-qr #qr-poster-area,
-    body.printing-qr #qr-poster-area * {
+    body.printing-qr #qr-print-page,
+    body.printing-qr #qr-print-page * {
         visibility: visible !important;
     }
 
-    body.printing-qr #qr-poster-area {
+    body.printing-qr #qr-print-page {
         display: flex !important;
-        position: absolute !important;
-        left: 50% !important;
-        top: 40% !important;
-        transform: translate(-50%, -50%) scale(1.5) !important;
+        width: 100% !important;
+        min-height: 240mm !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #ffffff !important;
+    }
+
+    body.printing-qr #qr-print-page .qr-print-poster {
+        display: flex !important;
+        transform: scale(1.45) !important;
         border: none !important;
         box-shadow: none !important;
         background: #ffffff !important;
