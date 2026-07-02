@@ -289,6 +289,16 @@ input:focus, select:focus, textarea:focus {
     padding: 1rem;
     padding-bottom: 2rem;
 }
+.public-credit {
+    margin: 1.25rem 0 0;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--neutral-500);
+}
+.public-credit span {
+    font-weight: 700;
+    color: var(--primary-700);
+}
 
 /* Bottom Navigation */
 .bottom-nav {
