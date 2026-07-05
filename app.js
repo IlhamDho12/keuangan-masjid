@@ -653,6 +653,28 @@ window.viewCommitteeDetail = function(id) {
     modal.classList.add('active');
 };
 
+// Gallery Detail Pop-up
+window.viewGalleryDetail = function() {
+    const items = getFilteredGalleryItems();
+    if (items.length === 0) return;
+    const activeItem = items[state.activeGalleryIndex];
+    if (!activeItem) return;
+    
+    const modal = document.getElementById('modal-gallery-detail');
+    const imgEl = document.getElementById('gallery-detail-image');
+    const dateEl = document.getElementById('gallery-detail-date');
+    const titleEl = document.getElementById('gallery-detail-title');
+    const descEl = document.getElementById('gallery-detail-desc');
+    if (!modal || !imgEl || !dateEl || !titleEl || !descEl) return;
+    
+    imgEl.src = activeItem.image_url;
+    dateEl.textContent = formatDateString(activeItem.date);
+    titleEl.textContent = activeItem.title;
+    descEl.textContent = activeItem.description;
+    
+    modal.classList.add('active');
+};
+
 // ================= RENDER PUBLIC VIEW =================
 function renderPublicView() {
     const balances = calculateBalances();
@@ -2224,11 +2246,11 @@ function renderPublicGallery() {
     const activeItem = items[state.activeGalleryIndex];
     
     container.innerHTML = `
-        <div class="gallery-carousel-card">
+        <div class="gallery-carousel-card" onclick="viewGalleryDetail()" style="cursor: pointer;">
             <div class="gallery-carousel-media">
                 <img src="${activeItem.image_url}" alt="${activeItem.title}" class="gallery-carousel-image">
-                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn prev" onclick="prevGalleryItem()">❮</button>` : ''}
-                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn next" onclick="nextGalleryItem()">❯</button>` : ''}
+                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn prev" onclick="prevGalleryItem(event)">❮</button>` : ''}
+                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn next" onclick="nextGalleryItem(event)">❯</button>` : ''}
             </div>
             <div class="gallery-carousel-body">
                 <span class="gallery-date">${formatDateString(activeItem.date)}</span>
@@ -2240,14 +2262,16 @@ function renderPublicGallery() {
     `;
 }
 
-window.prevGalleryItem = function() {
+window.prevGalleryItem = function(e) {
+    if (e) e.stopPropagation();
     const items = getFilteredGalleryItems();
     if (items.length <= 1) return;
     state.activeGalleryIndex = (state.activeGalleryIndex - 1 + items.length) % items.length;
     renderPublicGallery();
 };
 
-window.nextGalleryItem = function() {
+window.nextGalleryItem = function(e) {
+    if (e) e.stopPropagation();
     const items = getFilteredGalleryItems();
     if (items.length <= 1) return;
     state.activeGalleryIndex = (state.activeGalleryIndex + 1) % items.length;
@@ -2859,16 +2883,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-committee-detail-modal')?.addEventListener('click', () => {
         document.getElementById('modal-committee-detail').classList.remove('active');
     });
+    document.getElementById('close-gallery-detail-modal')?.addEventListener('click', () => {
+        document.getElementById('modal-gallery-detail').classList.remove('active');
+    });
 
     // Click outside modal content close trigger
     window.addEventListener('click', (e) => {
         const modalQris = document.getElementById('modal-qris');
         const modalReceipt = document.getElementById('modal-receipt');
         const modalCommitteeDetail = document.getElementById('modal-committee-detail');
+        const modalGalleryDetail = document.getElementById('modal-gallery-detail');
 
         if (e.target === modalQris) modalQris.classList.remove('active');
         if (e.target === modalReceipt) modalReceipt.classList.remove('active');
         if (e.target === modalCommitteeDetail) modalCommitteeDetail.classList.remove('active');
+        if (e.target === modalGalleryDetail) modalGalleryDetail.classList.remove('active');
     });
 
     // 8. Admin login and logout
