@@ -2190,6 +2190,19 @@ function renderPublicCommittee() {
 
     mosqueContainer.innerHTML = mosqueMembers.map(renderCard).join('');
     youthContainer.innerHTML = youthMembers.map(renderCard).join('');
+
+    let updateEl = document.getElementById('public-committee-updated-time');
+    if (!updateEl) {
+        updateEl = document.createElement('div');
+        updateEl.id = 'public-committee-updated-time';
+        updateEl.style.fontSize = '0.65rem';
+        updateEl.style.color = 'var(--neutral-500)';
+        updateEl.style.textAlign = 'center';
+        updateEl.style.marginTop = '1.5rem';
+        updateEl.style.width = '100%';
+        mosqueContainer.parentElement.parentElement.appendChild(updateEl);
+    }
+    updateEl.textContent = formatAdminUpdatedAt();
 }
 
 function renderPublicGallery() {
@@ -2241,6 +2254,19 @@ function renderPublicGallery() {
             </div>
         </div>
     `;
+
+    let updateEl = document.getElementById('public-gallery-updated-time');
+    if (!updateEl) {
+        updateEl = document.createElement('div');
+        updateEl.id = 'public-gallery-updated-time';
+        updateEl.style.fontSize = '0.65rem';
+        updateEl.style.color = 'var(--neutral-500)';
+        updateEl.style.textAlign = 'center';
+        updateEl.style.marginTop = '1.5rem';
+        updateEl.style.width = '100%';
+        container.parentElement.appendChild(updateEl);
+    }
+    updateEl.textContent = formatAdminUpdatedAt();
 }
 
 window.prevGalleryItem = function() {
@@ -2277,10 +2303,23 @@ function renderPublicSchedules() {
                 <span class="schedule-date-label">${formatDateString(schedule.date)}</span>
                 <h3>${schedule.title}</h3>
                 <p>${schedule.description}</p>
-                ${schedule.pic ? `<div class="schedule-pic">${schedule.pic}</div>` : ''}
+                ${schedule.pic ? `<div class="schedule-pic">📍 ${schedule.pic}</div>` : ''}
             </div>
         </article>
     `).join('');
+
+    let updateEl = document.getElementById('public-schedule-updated-time');
+    if (!updateEl) {
+        updateEl = document.createElement('div');
+        updateEl.id = 'public-schedule-updated-time';
+        updateEl.style.fontSize = '0.65rem';
+        updateEl.style.color = 'var(--neutral-500)';
+        updateEl.style.textAlign = 'center';
+        updateEl.style.marginTop = '1.5rem';
+        updateEl.style.width = '100%';
+        container.parentElement.appendChild(updateEl);
+    }
+    updateEl.textContent = formatAdminUpdatedAt();
 }
 
 function renderScheduleTicker() {
@@ -2312,24 +2351,20 @@ function renderAdminCommitteeList() {
 
     materializeCommitteeMembers();
 
-    listContainer.innerHTML = '';
-    if (state.committeeMembers.length === 0) {
-        listContainer.innerHTML = `<div class="empty-state" style="padding:1rem; text-align:center;"><p>Belum ada data pengurus.</p></div>`;
-        return;
-    }
+    const mosqueMembers = state.committeeMembers.filter(m => m.group === 'mosque');
+    const youthMembers = state.committeeMembers.filter(m => m.group === 'youth');
 
-    state.committeeMembers.forEach(member => {
+    const renderMemberItem = (member) => {
         const isEditMode = state.editingCommitteeId === member.id;
-        const groupLabel = member.group === 'mosque' ? 'Pengurus Masjid' : 'Remaja Masjid';
         const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0,2).toUpperCase()}</text></svg>`;
 
-        listContainer.innerHTML += `
+        return `
             <div class="admin-content-item" style="${isEditMode ? 'border-color: var(--primary-500); background: var(--primary-50);' : ''}">
                 <div class="admin-content-item-main">
                     <img class="admin-content-thumb" src="${avatarSrc}" alt="Foto ${member.name}">
                     <div>
                         <strong>${member.name}</strong>
-                        <span>${member.role} (${groupLabel})</span>
+                        <span>${member.role}</span>
                     </div>
                 </div>
                 <div class="admin-content-item-actions">
@@ -2342,7 +2377,29 @@ function renderAdminCommitteeList() {
                 </div>
             </div>
         `;
-    });
+    };
+
+    let html = '';
+    
+    html += `<h3 style="font-size:0.85rem; font-weight:700; color:var(--primary-900); margin:0 0 0.5rem 0; border-left: 3px solid var(--primary-600); padding-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Pengurus Masjid</h3>`;
+    if (mosqueMembers.length === 0) {
+        html += `<div class="empty-state" style="padding:0.75rem; text-align:center; margin-bottom:1rem;"><p style="font-size:0.75rem; margin:0; color:var(--neutral-400);">Belum ada data pengurus masjid.</p></div>`;
+    } else {
+        html += `<div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem;">`;
+        html += mosqueMembers.map(renderMemberItem).join('');
+        html += `</div>`;
+    }
+
+    html += `<h3 style="font-size:0.85rem; font-weight:700; color:var(--primary-900); margin:0 0 0.5rem 0; border-left: 3px solid var(--primary-600); padding-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Remaja Masjid (IRMA)</h3>`;
+    if (youthMembers.length === 0) {
+        html += `<div class="empty-state" style="padding:0.75rem; text-align:center;"><p style="font-size:0.75rem; margin:0; color:var(--neutral-400);">Belum ada data remaja masjid.</p></div>`;
+    } else {
+        html += `<div style="display:flex; flex-direction:column; gap:0.5rem;">`;
+        html += youthMembers.map(renderMemberItem).join('');
+        html += `</div>`;
+    }
+
+    listContainer.innerHTML = html;
 }
 
 function renderAdminGalleryList() {
