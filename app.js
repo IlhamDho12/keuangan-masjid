@@ -18,6 +18,8 @@ let firebaseApp = null;
 let firestoreDb = null;
 let firebaseAuth = null;
 let firebaseReady = false;
+let cropperInstance = null;
+let activeCropCallback = null;
 
 if (typeof firebase !== 'undefined') {
     firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
@@ -2912,14 +2914,12 @@ document.addEventListener('DOMContentLoaded', () => {
         committeePhotoInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                state.tempCommitteePhotoBase64 = evt.target.result;
+            openCropModal(file, (croppedBase64) => {
+                state.tempCommitteePhotoBase64 = croppedBase64;
                 committeePhotoPreview.className = 'file-upload-preview compact has-image';
-                committeePhotoPreview.innerHTML = `<img src="${state.tempCommitteePhotoBase64}" alt="Pratinjau Foto Pengurus">`;
+                committeePhotoPreview.innerHTML = `<img src="${croppedBase64}" alt="Pratinjau Foto Pengurus">`;
                 showToast('Foto pengurus siap disimpan.');
-            };
-            reader.readAsDataURL(file);
+            });
         });
     }
 
@@ -2939,6 +2939,19 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsDataURL(file);
         });
     }
+
+    // Crop Modal Listeners
+    document.getElementById('btn-crop-cancel')?.addEventListener('click', closeCropModal);
+    document.getElementById('btn-crop-save')?.addEventListener('click', () => {
+        if (!cropperInstance || !activeCropCallback) return;
+        const canvas = cropperInstance.getCroppedCanvas({
+            width: 256,
+            height: 256,
+        });
+        const croppedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        activeCropCallback(croppedBase64);
+        closeCropModal();
+    });
 
     // 12. File input reader for receipts (Base64 conversion)
     const receiptInput = document.getElementById('tx-receipt');
@@ -2964,14 +2977,12 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    state.treasurerAvatar = evt.target.result;
+                openCropModal(file, (croppedBase64) => {
+                    state.treasurerAvatar = croppedBase64;
                     saveState();
                     updateProfileDisplay();
                     showToast('Foto profil bendahara berhasil diperbarui.');
-                };
-                reader.readAsDataURL(file);
+                });
             }
         });
     }
@@ -3057,3 +3068,46 @@ window.nextGalleryItem = function() {
     state.activeGalleryIndex = (state.activeGalleryIndex + 1) % items.length;
     renderPublicGallery();
 };
+
+function openCropModal(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const modal = document.getElementById('modal-crop');
+        const cropImg = document.getElementById('crop-image-source');
+        if (!modal || !cropImg) return;
+        
+        cropImg.src = evt.target.result;
+        activeCropCallback = callback;
+        
+        modal.classList.add('active');
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+        }
+        
+        setTimeout(() => {
+            cropperInstance = new Cropper(cropImg, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 0.9,
+                responsive: true,
+                background: false
+            });
+        }, 150);
+    };
+    reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+    const modal = document.getElementById('modal-crop');
+    if (modal) modal.classList.remove('active');
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+    // Reset file input values
+    const committeePhoto = document.getElementById('committee-photo');
+    if (committeePhoto) committeePhoto.value = '';
+    const avatarInput = document.getElementById('change-admin-avatar');
+    if (avatarInput) avatarInput.value = '';
+}
