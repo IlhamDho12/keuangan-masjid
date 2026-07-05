@@ -1481,7 +1481,8 @@ input:focus, select:focus, textarea:focus {
 .ticker-track {
     overflow: hidden;
     white-space: nowrap;
-    width: 100%;
+    flex-grow: 1;
+    min-width: 0;
 }
 .ticker-track span {
     display: inline-block;

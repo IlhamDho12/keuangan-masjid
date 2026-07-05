@@ -1146,6 +1146,12 @@ function renderAdminActiveTab() {
         renderAdminProjectsTab();
     } else if (state.activeAdminTab === 'adm-screen-aspirasi') {
         renderAdminFeedbackTab();
+    } else if (state.activeAdminTab === 'adm-screen-bagan') {
+        renderAdminCommitteeList();
+    } else if (state.activeAdminTab === 'adm-screen-jadwal') {
+        renderAdminScheduleList();
+    } else if (state.activeAdminTab === 'adm-screen-galeri') {
+        renderAdminGalleryList();
     }
 }
 
