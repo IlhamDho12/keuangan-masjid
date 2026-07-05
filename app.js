@@ -631,6 +631,28 @@ function switchAppScreen(screenId, group) {
     }
 }
 
+// Committee Member Detail Pop-up
+window.viewCommitteeDetail = function(id) {
+    const member = state.committeeMembers.find(m => m.id === id);
+    if (!member) return;
+    
+    const modal = document.getElementById('modal-committee-detail');
+    const photoEl = document.getElementById('committee-detail-photo');
+    const nameEl = document.getElementById('committee-detail-name');
+    const roleEl = document.getElementById('committee-detail-role');
+    const groupEl = document.getElementById('committee-detail-group');
+    if (!modal || !photoEl || !nameEl || !roleEl || !groupEl) return;
+    
+    const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
+    
+    photoEl.src = avatarSrc;
+    nameEl.textContent = member.name;
+    roleEl.textContent = member.role;
+    groupEl.textContent = member.group === 'mosque' ? 'Pengurus Masjid Raudhatul Khoiriyah' : 'Remaja Masjid Raudhatul Khoiriyah';
+    
+    modal.classList.add('active');
+};
+
 // ================= RENDER PUBLIC VIEW =================
 function renderPublicView() {
     const balances = calculateBalances();
@@ -2156,9 +2178,9 @@ function renderPublicCommittee() {
     const youthMembers = state.committeeMembers.filter(m => m.group === 'youth');
 
     const renderCard = (member) => {
-        const avatarSrc = member.photo_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
+        const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
         return `
-            <div class="committee-card">
+            <div class="committee-card" onclick="viewCommitteeDetail('${member.id}')" style="cursor: pointer;">
                 <img class="committee-photo" src="${avatarSrc}" alt="Foto ${member.name}">
                 <h3>${member.name}</h3>
                 <p>${member.role}</p>
@@ -2299,7 +2321,7 @@ function renderAdminCommitteeList() {
     state.committeeMembers.forEach(member => {
         const isEditMode = state.editingCommitteeId === member.id;
         const groupLabel = member.group === 'mosque' ? 'Pengurus Masjid' : 'Remaja Masjid';
-        const avatarSrc = member.photo_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0,2).toUpperCase()}</text></svg>`;
+        const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0,2).toUpperCase()}</text></svg>`;
 
         listContainer.innerHTML += `
             <div class="admin-content-item" style="${isEditMode ? 'border-color: var(--primary-500); background: var(--primary-50);' : ''}">
@@ -2819,14 +2841,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-receipt-modal').addEventListener('click', () => {
         document.getElementById('modal-receipt').classList.remove('active');
     });
+    document.getElementById('close-committee-detail-modal')?.addEventListener('click', () => {
+        document.getElementById('modal-committee-detail').classList.remove('active');
+    });
 
     // Click outside modal content close trigger
     window.addEventListener('click', (e) => {
         const modalQris = document.getElementById('modal-qris');
         const modalReceipt = document.getElementById('modal-receipt');
+        const modalCommitteeDetail = document.getElementById('modal-committee-detail');
 
         if (e.target === modalQris) modalQris.classList.remove('active');
         if (e.target === modalReceipt) modalReceipt.classList.remove('active');
+        if (e.target === modalCommitteeDetail) modalCommitteeDetail.classList.remove('active');
     });
 
     // 8. Admin login and logout

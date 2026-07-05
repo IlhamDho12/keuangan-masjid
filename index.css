@@ -1,5 +1,9 @@
 /* CSS Custom Variables for Design Tokens */
 :root {
+    --warning-100: #fef3c7; /* Light Amber */
+    --warning-200: #fde68a; /* Amber 200 */
+    --warning-800: #92400e; /* Dark Amber */
+    --warning-900: #78350f; /* Very Dark Amber */
     --primary-900: #064e3b; /* Deep Emerald */
     --primary-800: #065f46; /* Strong Emerald */
     --primary-700: #047857; /* Medium Emerald */
