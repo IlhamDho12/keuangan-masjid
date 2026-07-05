@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.css?v=1783266747720">
     <link rel="icon" type="image/png" href="https://keuangan-masjid-rk.web.app/assets/logo.png">
     <link rel="apple-touch-icon" href="https://keuangan-masjid-rk.web.app/assets/logo.png">
     <link rel="canonical" href="https://keuangan-masjid-rk.web.app/">
@@ -137,6 +137,11 @@
                         <span id="pub-last-updated">Memuat data terakhir...</span>
                     </div>
 
+                    <div class="schedule-ticker" id="schedule-ticker" style="display:none;">
+                        <span class="ticker-label">Jadwal</span>
+                        <div class="ticker-track"><span id="schedule-ticker-text"></span></div>
+                    </div>
+
                     <!-- QRIS Button -->
                     <div class="qris-promo-card">
                         <div class="qris-promo-left">
@@ -246,6 +251,60 @@
                 </div>
             </div>
 
+            <!-- SCREEN: Struktur Pengurus -->
+            <div class="app-screen" id="pub-screen-struktur">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Struktur Pengurus</h2>
+                        <p>Susunan pengurus masjid dan remaja masjid yang dapat dilengkapi dari dashboard admin.</p>
+                    </div>
+                    <div class="segmented-tabs" role="tablist" aria-label="Kategori struktur pengurus">
+                        <button class="segmented-tab active" type="button" data-committee-tab="mosque">Pengurus Masjid</button>
+                        <button class="segmented-tab" type="button" data-committee-tab="youth">Remaja Masjid</button>
+                    </div>
+                    <div class="committee-panel active" id="committee-panel-mosque">
+                        <div class="committee-grid" id="public-committee-mosque"></div>
+                    </div>
+                    <div class="committee-panel" id="committee-panel-youth">
+                        <div class="committee-grid" id="public-committee-youth"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Jadwal Kegiatan -->
+            <div class="app-screen" id="pub-screen-jadwal">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Jadwal Kegiatan</h2>
+                        <p>Agenda kegiatan masjid dan remaja masjid yang sedang aktif.</p>
+                    </div>
+                    <div class="schedule-list" id="public-schedule-container"></div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Galeri Kegiatan -->
+            <div class="app-screen" id="pub-screen-galeri">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Galeri Kegiatan</h2>
+                        <p>Dokumentasi kegiatan masjid dan remaja masjid beserta tanggal, judul, dan deskripsi kegiatan.</p>
+                    </div>
+                    <div class="gallery-filter-bar">
+                        <select id="gallery-filter-month">
+                            <option value="all">Semua Bulan</option>
+                            <option value="01">Januari</option><option value="02">Februari</option>
+                            <option value="03">Maret</option><option value="04">April</option>
+                            <option value="05">Mei</option><option value="06">Juni</option>
+                            <option value="07">Juli</option><option value="08">Agustus</option>
+                            <option value="09">September</option><option value="10">Oktober</option>
+                            <option value="11">November</option><option value="12">Desember</option>
+                        </select>
+                        <select id="gallery-filter-year"></select>
+                    </div>
+                    <div class="gallery-list" id="public-gallery-container"></div>
+                </div>
+            </div>
+
             <!-- SCREEN: Aspirasi -->
             <div class="app-screen" id="pub-screen-aspirasi">
                 <div class="screen-content">
@@ -290,9 +349,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L2 12h3v9h14v-9h3L12 3zm0 12.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
                     <span>Program</span>
                 </button>
-                <button class="bnav-btn" data-screen="pub-screen-aspirasi" data-group="public">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-                    <span>Aspirasi</span>
+                <button class="bnav-btn" id="btn-open-more-menu" type="button" data-group="public">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5S3.17 13.5 4 13.5s1.5-.67 1.5-1.5S4.83 10.5 4 10.5zm8 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm8 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/></svg>
+                    <span>Lainnya</span>
                 </button>
             </nav>
         </div>
@@ -493,6 +552,152 @@
                 </div>
             </div>
 
+            <!-- SCREEN: Kelola Bagan Pengurus -->
+            <div class="app-screen" id="adm-screen-bagan">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Kelola Bagan Pengurus</h2>
+                        <p>Tambah susunan pengurus masjid dan remaja masjid untuk halaman publik.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Tambah Pengurus / Remaja Masjid</h2>
+                            <p>Foto bersifat opsional. Jika kosong, sistem akan memakai inisial nama.</p>
+                        </div>
+                        <div class="card-body">
+                            <form id="admin-committee-form" class="responsive-form">
+                                <div class="form-row-double">
+                                    <div class="form-group">
+                                        <label for="committee-group">Kategori</label>
+                                        <select id="committee-group" required>
+                                            <option value="mosque">Pengurus Masjid</option>
+                                            <option value="youth">Remaja Masjid</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="committee-role">Jabatan</label>
+                                        <input type="text" id="committee-role" placeholder="Contoh: Ketua / Sekretaris" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="committee-name">Nama</label>
+                                    <input type="text" id="committee-name" placeholder="Contoh: Ahmad Fikri" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="committee-photo">Foto (Opsional)</label>
+                                    <input type="file" id="committee-photo" accept="image/*">
+                                    <div class="file-upload-preview compact" id="committee-photo-preview">
+                                        <span class="placeholder-text">Belum ada foto dipilih.</span>
+                                    </div>
+                                </div>
+                                <div class="form-actions-right">
+                                    <button type="button" class="btn btn-secondary" id="committee-cancel-edit" style="display:none;">Batal Edit</button>
+                                    <button type="submit" class="btn btn-primary" id="committee-submit-btn">Simpan Data Pengurus</button>
+                                </div>
+                            </form>
+                            <div class="admin-content-list" id="admin-committee-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Kelola Galeri -->
+            <div class="app-screen" id="adm-screen-galeri">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Kelola Galeri</h2>
+                        <p>Tambah dokumentasi kegiatan masjid dan remaja masjid untuk halaman publik.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Tambah Galeri Kegiatan</h2>
+                            <p>Isi tanggal, judul kegiatan, deskripsi, dan foto kegiatan bila tersedia.</p>
+                        </div>
+                        <div class="card-body">
+                            <form id="admin-gallery-form" class="responsive-form">
+                                <div class="form-row-double">
+                                    <div class="form-group">
+                                        <label for="gallery-date">Tanggal Kegiatan</label>
+                                        <input type="date" id="gallery-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gallery-title">Judul / Nama Kegiatan</label>
+                                        <input type="text" id="gallery-title" placeholder="Contoh: Pengajian Bulanan" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="gallery-desc">Deskripsi Kegiatan</label>
+                                    <textarea id="gallery-desc" rows="3" placeholder="Tuliskan ringkasan kegiatan..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="gallery-image">Foto Kegiatan (Opsional)</label>
+                                    <input type="file" id="gallery-image" accept="image/*">
+                                    <div class="file-upload-preview compact" id="gallery-image-preview">
+                                        <span class="placeholder-text">Belum ada foto dipilih.</span>
+                                    </div>
+                                </div>
+                                <div class="form-actions-right">
+                                    <button type="button" class="btn btn-secondary" id="gallery-cancel-edit" style="display:none;">Batal Edit</button>
+                                    <button type="submit" class="btn btn-primary" id="gallery-submit-btn">Simpan Galeri</button>
+                                </div>
+                            </form>
+                            <div class="admin-content-list" id="admin-gallery-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN: Kelola Jadwal -->
+            <div class="app-screen" id="adm-screen-jadwal">
+                <div class="screen-content">
+                    <div class="screen-title-block">
+                        <h2>Kelola Jadwal</h2>
+                        <p>Tambah agenda aktif, tampilkan di running text, atau tandai selesai.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Tambah Jadwal Kegiatan</h2>
+                            <p>Jadwal selesai otomatis dibersihkan setelah 7 hari.</p>
+                        </div>
+                        <div class="card-body">
+                            <form id="admin-schedule-form" class="responsive-form">
+                                <div class="form-row-double">
+                                    <div class="form-group">
+                                        <label for="schedule-date">Tanggal</label>
+                                        <input type="date" id="schedule-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="schedule-time">Waktu</label>
+                                        <input type="time" id="schedule-time" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-title">Nama Kegiatan</label>
+                                    <input type="text" id="schedule-title" placeholder="Contoh: Pengajian Bulanan" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-desc">Deskripsi</label>
+                                    <textarea id="schedule-desc" rows="3" placeholder="Ringkasan kegiatan..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-pic">Penanggung Jawab / Tempat</label>
+                                    <input type="text" id="schedule-pic" placeholder="Contoh: Pengurus Masjid / Ruang Utama">
+                                </div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="schedule-ticker-check" checked>
+                                    <span>Tampilkan di running text</span>
+                                </label>
+                                <div class="form-actions-right">
+                                    <button type="button" class="btn btn-secondary" id="schedule-cancel-edit" style="display:none;">Batal Edit</button>
+                                    <button type="submit" class="btn btn-primary" id="schedule-submit-btn">Simpan Jadwal</button>
+                                </div>
+                            </form>
+                            <div class="admin-content-list" id="admin-schedule-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- SCREEN: Pengaturan Admin -->
             <div class="app-screen" id="adm-screen-settings">
                 <div class="screen-content">
@@ -639,18 +844,96 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2v-7h2v7zm4 0h-2v-7h2v7z"/></svg>
                     <span>Program</span>
                 </button>
-                <button class="bnav-btn" data-screen="adm-screen-aspirasi" data-group="admin">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-                    <span>Aspirasi <span class="badge" id="feedback-badge">0</span></span>
-                </button>
                 <button class="bnav-btn" data-screen="adm-screen-settings" data-group="admin">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                     <span>Pengaturan</span>
+                </button>
+                <button class="bnav-btn" id="btn-open-admin-more-menu" type="button" data-group="admin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5S3.17 13.5 4 13.5s1.5-.67 1.5-1.5S4.83 10.5 4 10.5zm8 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm8 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/></svg>
+                    <span>Lainnya <span class="badge" id="feedback-badge">0</span></span>
                 </button>
             </nav>
         </div>
 
     </div><!-- end .app-shell -->
+
+    <!-- Public More Menu -->
+    <div class="more-sheet" id="public-more-sheet" aria-hidden="true">
+        <button class="more-sheet-backdrop" id="public-more-backdrop" type="button" aria-label="Tutup menu lainnya"></button>
+        <div class="more-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="public-more-title">
+            <div class="more-sheet-header">
+                <h3 id="public-more-title">Lainnya</h3>
+                <button class="more-sheet-close" id="close-public-more" type="button" aria-label="Tutup">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.41L10.59 13.41 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z"/></svg>
+                </button>
+            </div>
+            <div class="more-sheet-options">
+                <button class="more-sheet-option" type="button" data-screen="pub-screen-aspirasi">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                    </span>
+                    <span><strong>Aspirasi</strong><small>Kotak saran jamaah</small></span>
+                </button>
+                <button class="more-sheet-option" type="button" data-screen="pub-screen-struktur">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </span>
+                    <span><strong>Struktur Bagan</strong><small>Pengurus masjid dan remaja masjid</small></span>
+                </button>
+                <button class="more-sheet-option" type="button" data-screen="pub-screen-jadwal">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7zm12 18H5V9h14v11z"/></svg>
+                    </span>
+                    <span><strong>Jadwal</strong><small>Agenda aktif dan kegiatan terdekat</small></span>
+                </button>
+                <button class="more-sheet-option" type="button" data-screen="pub-screen-galeri">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 11.5l2.5 3.01L14.5 10l4.5 6H5l3.5-4.5z"/></svg>
+                    </span>
+                    <span><strong>Galeri</strong><small>Dokumentasi kegiatan masjid</small></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin More Menu -->
+    <div class="more-sheet" id="admin-more-sheet" aria-hidden="true">
+        <button class="more-sheet-backdrop" id="admin-more-backdrop" type="button" aria-label="Tutup menu lainnya admin"></button>
+        <div class="more-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="admin-more-title">
+            <div class="more-sheet-header">
+                <h3 id="admin-more-title">Lainnya</h3>
+                <button class="more-sheet-close" id="close-admin-more" type="button" aria-label="Tutup">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.41L10.59 13.41 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z"/></svg>
+                </button>
+            </div>
+            <div class="more-sheet-options">
+                <button class="more-sheet-option" type="button" data-admin-screen="adm-screen-aspirasi">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                    </span>
+                    <span><strong>Aspirasi</strong><small>Inbox saran jamaah</small></span>
+                </button>
+                <button class="more-sheet-option" type="button" data-admin-screen="adm-screen-bagan">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </span>
+                    <span><strong>Bagan</strong><small>Kelola pengurus dan remaja masjid</small></span>
+                </button>
+                <button class="more-sheet-option" type="button" data-admin-screen="adm-screen-jadwal">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7zm12 18H5V9h14v11z"/></svg>
+                    </span>
+                    <span><strong>Jadwal</strong><small>Kelola agenda dan running text</small></span>
+                </button>
+                <button class="more-sheet-option" type="button" data-admin-screen="adm-screen-galeri">
+                    <span class="more-sheet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 11.5l2.5 3.01L14.5 10l4.5 6H5l3.5-4.5z"/></svg>
+                    </span>
+                    <span><strong>Galeri</strong><small>Kelola dokumentasi kegiatan</small></span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ================= MODALS ================= -->
 
@@ -812,6 +1095,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="vendor/jspdf.umd.min.js?v=20260701-local"></script>
-    <script src="app.js?v=20260701-local-qrpdf"></script>
+    <script src="app.js?v=1783266747720"></script>
 </body>
 </html>

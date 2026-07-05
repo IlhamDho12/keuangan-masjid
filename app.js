@@ -37,6 +37,37 @@ const getRelativeDateString = (daysAgo) => {
     return d.toISOString().split('T')[0];
 };
 
+const createDemoGalleryImage = (title, primary, secondary) => (
+    `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${primary}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="900" height="560" fill="url(#g)"/><circle cx="740" cy="120" r="90" fill="rgba(255,255,255,.16)"/><circle cx="130" cy="450" r="130" fill="rgba(255,255,255,.12)"/><rect x="95" y="95" width="710" height="370" rx="34" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.35)" stroke-width="3"/><text x="450" y="265" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800" fill="white">${title}</text><text x="450" y="320" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600" fill="rgba(255,255,255,.82)">Masjid Raudhatul Khoiriyah</text></svg>`)}`
+);
+
+const INITIAL_COMMITTEE_MEMBERS = [
+    { id: 'committee-mosque-chair', group: 'mosque', name: 'Supriyadi', role: 'Ketua', photo_url: null },
+    { id: 'committee-mosque-secretary', group: 'mosque', name: 'Dr. Rahmad', role: 'Sekretaris', photo_url: null },
+    { id: 'committee-mosque-treasurer', group: 'mosque', name: 'Ardy Toher', role: 'Bendahara', photo_url: null },
+    { id: 'committee-mosque-worship', group: 'mosque', name: 'Kiai Damrulah', role: 'Peribadatan', photo_url: null },
+    { id: 'committee-mosque-phbi', group: 'mosque', name: 'Alkodri', role: 'Ketua Peringatan Hari Besar Islam', photo_url: null },
+    { id: 'committee-mosque-public-relations', group: 'mosque', name: 'Mang Kader', role: 'Humas', photo_url: null },
+    { id: 'committee-mosque-development', group: 'mosque', name: 'Belum Diisi', role: 'Ketua Pembangunan', photo_url: null },
+    { id: 'committee-youth-chair', group: 'youth', name: 'Ucok', role: 'Ketua', photo_url: null },
+    { id: 'committee-youth-vice-chair', group: 'youth', name: 'Redo', role: 'Wakil Ketua', photo_url: null },
+    { id: 'committee-youth-secretary', group: 'youth', name: 'Kak Deki', role: 'Sekretaris', photo_url: null },
+    { id: 'committee-youth-treasurer', group: 'youth', name: 'Yuk Desi', role: 'Bendahara', photo_url: null },
+    { id: 'committee-youth-study', group: 'youth', name: 'Kak Edi', role: 'Pengajian', photo_url: null },
+    { id: 'committee-youth-public-relations', group: 'youth', name: 'Ronal', role: 'Humas', photo_url: null }
+];
+
+const INITIAL_GALLERY_ITEMS = [
+    { id: 'gallery-demo-1', date: getRelativeDateString(2), title: 'Pengajian Bulanan Jamaah', description: 'Kegiatan pengajian rutin bersama jamaah sekitar masjid setelah salat Magrib.', image_url: createDemoGalleryImage('Pengajian Bulanan', '#065f46', '#0f766e') },
+    { id: 'gallery-demo-2', date: getRelativeDateString(9), title: 'Kerja Bakti Masjid', description: 'Gotong royong membersihkan area masjid, halaman, dan tempat wudu bersama pengurus serta remaja masjid.', image_url: createDemoGalleryImage('Kerja Bakti', '#0f766e', '#f59e0b') },
+    { id: 'gallery-demo-3', date: getRelativeDateString(18), title: 'Santunan Jumat Berkah', description: 'Penyaluran paket bantuan untuk warga sekitar sebagai bagian dari program sosial masjid.', image_url: createDemoGalleryImage('Jumat Berkah', '#064e3b', '#15803d') }
+];
+
+const INITIAL_SCHEDULES = [
+    { id: 'schedule-demo-1', date: getRelativeDateString(-2), time: '19:30', title: 'Yasinan Malam Jumat', description: 'Pembacaan Yasin dan doa bersama jamaah.', pic: 'Pengurus Masjid', show_ticker: true, status: 'active', completed_at: null, auto_delete_at: null },
+    { id: 'schedule-demo-2', date: getRelativeDateString(-5), time: '16:00', title: 'Pengajian Remaja Masjid', description: 'Kajian rutin dan pembinaan remaja masjid.', pic: 'Remaja Masjid', show_ticker: true, status: 'active', completed_at: null, auto_delete_at: null }
+];
+
 const INITIAL_TRANSACTIONS = [
     { id: 'tx-demo-1', date: getRelativeDateString(0), amount: 2750000, type: 'income', description: 'Infak Jumat pekan pertama Juli', storage: 'cash', receipt_url: null },
     { id: 'tx-demo-2', date: getRelativeDateString(1), amount: 1500000, type: 'income', description: 'Transfer donatur untuk program santunan', storage: 'bank', receipt_url: null },
@@ -73,7 +104,14 @@ let state = {
     currentRole: sessionStorage.getItem('current_role') || 'public', // 'public' | 'admin'
     activeAdminTab: 'adm-screen-tx',
     editingTxId: null,
-    tempReceiptBase64: null
+    tempReceiptBase64: null,
+    committeeMembers: [],
+    galleryItems: [],
+    schedules: [],
+    lastAdminUpdatedAt: null,
+    tempCommitteePhotoBase64: null,
+    tempGalleryImageBase64: null,
+    editingScheduleId: null
 };
 
 function isAdminUser(user) {
@@ -88,7 +126,11 @@ function getSettingsState() {
         bankName: state.bankName,
         bankAccountNumber: state.bankAccountNumber,
         bankAccountHolder: state.bankAccountHolder,
-        whatsappNumber: state.whatsappNumber
+        whatsappNumber: state.whatsappNumber,
+        committeeMembers: state.committeeMembers,
+        galleryItems: state.galleryItems,
+        schedules: state.schedules,
+        lastAdminUpdatedAt: state.lastAdminUpdatedAt
     };
 }
 
@@ -112,6 +154,13 @@ function applyLoadedState(parsed, includeFeedbacks = true) {
     state.bankAccountNumber = parsed.bankAccountNumber || '71234567890';
     state.bankAccountHolder = parsed.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
     state.whatsappNumber = parsed.whatsappNumber || '6285369463373';
+    
+    const loadedCommitteeMembers = Array.isArray(parsed.committeeMembers) ? parsed.committeeMembers : [...INITIAL_COMMITTEE_MEMBERS];
+    state.committeeMembers = loadedCommitteeMembers;
+    
+    state.galleryItems = Array.isArray(parsed.galleryItems) ? parsed.galleryItems : [...INITIAL_GALLERY_ITEMS];
+    state.schedules = cleanupExpiredSchedules(Array.isArray(parsed.schedules) ? parsed.schedules : [...INITIAL_SCHEDULES]);
+    state.lastAdminUpdatedAt = parsed.lastAdminUpdatedAt || null;
 }
 
 async function getCollectionData(collectionName) {
@@ -218,8 +267,93 @@ function resetToInitialData() {
     state.bankAccountNumber = '71234567890';
     state.bankAccountHolder = 'Masjid Raudhatul Khoiriyah';
     state.whatsappNumber = '6285369463373';
+    state.committeeMembers = [...INITIAL_COMMITTEE_MEMBERS];
+    state.galleryItems = [...INITIAL_GALLERY_ITEMS];
+    state.schedules = [...INITIAL_SCHEDULES];
+    state.lastAdminUpdatedAt = null;
+    state.editingCommitteeId = null;
+    state.editingGalleryId = null;
+    state.activeGalleryIndex = 0;
+    state.tempCommitteePhotoBase64 = null;
+    state.tempGalleryImageBase64 = null;
     saveState();
 }
+
+function addDaysToDateString(dateString, days) {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split('T')[0];
+}
+
+function cleanupExpiredSchedules(schedules) {
+    const today = new Date().toISOString().split('T')[0];
+    return schedules.filter(schedule => !(schedule.status === 'completed' && schedule.auto_delete_at && schedule.auto_delete_at < today));
+}
+
+function touchAdminUpdate() {
+    state.lastAdminUpdatedAt = new Date().toISOString();
+}
+
+function formatAdminUpdatedAt() {
+    if (!state.lastAdminUpdatedAt) return 'Belum ada pembaruan dari admin.';
+    const date = new Date(state.lastAdminUpdatedAt);
+    const dateStr = date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return `Data terakhir diperbarui admin: ${dateStr}, pukul ${timeStr} WIB`;
+}
+
+function materializeCommitteeMembers() {
+    if (!Array.isArray(state.committeeMembers) || state.committeeMembers.length === 0) {
+        state.committeeMembers = INITIAL_COMMITTEE_MEMBERS.map(item => ({ ...item }));
+    }
+}
+
+function materializeGalleryItems() {
+    if (!Array.isArray(state.galleryItems) || state.galleryItems.length === 0) {
+        state.galleryItems = INITIAL_GALLERY_ITEMS.map(item => ({ ...item }));
+    }
+}
+
+function materializeSchedules() {
+    if (!Array.isArray(state.schedules) || state.schedules.length === 0) {
+        state.schedules = INITIAL_SCHEDULES.map(item => ({ ...item }));
+    }
+    state.schedules = cleanupExpiredSchedules(state.schedules);
+}
+
+function getSchedulesForDisplay() {
+    return cleanupExpiredSchedules(Array.isArray(state.schedules) && state.schedules.length ? state.schedules : INITIAL_SCHEDULES);
+}
+
+function getActiveSchedules() {
+    return getSchedulesForDisplay()
+        .filter(schedule => schedule.status !== 'completed')
+        .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+}
+
+function formatScheduleTime(schedule) {
+    return `${formatDateString(schedule.date)} · ${schedule.time || '--:--'} WIB`;
+}
+
+function getFilteredGalleryItems() {
+    const monthFilter = document.getElementById('gallery-filter-month')?.value || 'all';
+    const yearFilter = document.getElementById('gallery-filter-year')?.value || 'all';
+
+    return [...getGalleryItemsForDisplay()]
+        .filter(item => {
+            const itemMonth = item.date?.substr(5, 2);
+            const itemYear = item.date?.substr(0, 4);
+            const matchesMonth = monthFilter === 'all' || itemMonth === monthFilter;
+            const matchesYear = yearFilter === 'all' || itemYear === yearFilter;
+            return matchesMonth && matchesYear;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function getGalleryItemsForDisplay() {
+    return Array.isArray(state.galleryItems) && state.galleryItems.length ? state.galleryItems : INITIAL_GALLERY_ITEMS;
+}
+
 
 // Update Treasurer Profile Header and Settings Inputs
 function updateProfileDisplay() {
@@ -503,6 +637,10 @@ function renderPublicView() {
     renderSVGChart();
     renderPublicProjects();
     renderPublicTransactions();
+    renderPublicCommittee();
+    renderPublicGallery();
+    renderPublicSchedules();
+    renderScheduleTicker();
 }
 
 // Render Custom SVG Chart (Dynamic Filter based on Year and Month Selectors)
@@ -1953,6 +2091,623 @@ window.togglePasswordVisibility = function(inputId, btnEl) {
     }
 };
 
+
+// ================= PUBLIC RENDERING FUNCTIONS =================
+
+function renderPublicCommittee() {
+    const mosqueContainer = document.getElementById('public-committee-mosque');
+    const youthContainer = document.getElementById('public-committee-youth');
+    if (!mosqueContainer || !youthContainer) return;
+
+    materializeCommitteeMembers();
+
+    const mosqueMembers = state.committeeMembers.filter(m => m.group === 'mosque');
+    const youthMembers = state.committeeMembers.filter(m => m.group === 'youth');
+
+    const renderCard = (member) => {
+        const avatarSrc = member.photo_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
+        return `
+            <div class="committee-card">
+                <div class="committee-avatar-wrapper">
+                    <img class="committee-avatar" src="${avatarSrc}" alt="Foto ${member.name}">
+                </div>
+                <div class="committee-info">
+                    <h4>${member.name}</h4>
+                    <p>${member.role}</p>
+                </div>
+            </div>
+        `;
+    };
+
+    mosqueContainer.innerHTML = mosqueMembers.map(renderCard).join('');
+    youthContainer.innerHTML = youthMembers.map(renderCard).join('');
+}
+
+function renderPublicGallery() {
+    const container = document.getElementById('public-gallery-container');
+    const yearSelect = document.getElementById('gallery-filter-year');
+    if (!container) return;
+
+    materializeGalleryItems();
+
+    // Populate year filter dropdown dynamically if it exists
+    if (yearSelect) {
+        const yearsInGallery = [...new Set(state.galleryItems.map(item => item.date.substr(0, 4)))].sort((a, b) => b - a);
+        const currentYear = new Date().getFullYear().toString();
+        if (!yearsInGallery.includes(currentYear)) yearsInGallery.unshift(currentYear);
+        
+        const currentVal = yearSelect.value;
+        yearSelect.innerHTML = `<option value="all">Semua Tahun</option>`;
+        yearsInGallery.forEach(y => {
+            yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+        });
+        if (currentVal && [...yearSelect.options].find(o => o.value === currentVal)) {
+            yearSelect.value = currentVal;
+        }
+    }
+
+    const items = getFilteredGalleryItems();
+    if (items.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; text-align: center;"><p>Belum ada dokumentasi kegiatan.</p></div>`;
+        return;
+    }
+
+    if (state.activeGalleryIndex === undefined) state.activeGalleryIndex = 0;
+    if (state.activeGalleryIndex >= items.length) state.activeGalleryIndex = 0;
+    
+    const activeItem = items[state.activeGalleryIndex];
+    
+    container.innerHTML = `
+        <div class="gallery-carousel-card">
+            <div class="gallery-carousel-media">
+                <img src="${activeItem.image_url}" alt="${activeItem.title}" class="gallery-carousel-image">
+                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn prev" onclick="prevGalleryItem()">❮</button>` : ''}
+                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn next" onclick="nextGalleryItem()">❯</button>` : ''}
+            </div>
+            <div class="gallery-carousel-body">
+                <span class="gallery-date">${formatDateString(activeItem.date)}</span>
+                <h3>${activeItem.title}</h3>
+                <p>${activeItem.description}</p>
+                <div class="gallery-counter">${state.activeGalleryIndex + 1} dari ${items.length}</div>
+            </div>
+        </div>
+    `;
+}
+
+window.prevGalleryItem = function() {
+    const items = getFilteredGalleryItems();
+    if (items.length <= 1) return;
+    state.activeGalleryIndex = (state.activeGalleryIndex - 1 + items.length) % items.length;
+    renderPublicGallery();
+};
+
+window.nextGalleryItem = function() {
+    const items = getFilteredGalleryItems();
+    if (items.length <= 1) return;
+    state.activeGalleryIndex = (state.activeGalleryIndex + 1) % items.length;
+    renderPublicGallery();
+};
+
+function renderPublicSchedules() {
+    const container = document.getElementById('public-schedule-container');
+    if (!container) return;
+
+    const schedules = getActiveSchedules();
+    if (schedules.length === 0) {
+        container.innerHTML = `<div class="empty-state"><p>Belum ada jadwal aktif.</p></div>`;
+        return;
+    }
+
+    container.innerHTML = schedules.map(schedule => `
+        <article class="schedule-card">
+            <div class="schedule-date-block">
+                <span>${schedule.time}</span>
+                <small>WIB</small>
+            </div>
+            <div class="schedule-card-body">
+                <span class="schedule-date-label">${formatDateString(schedule.date)}</span>
+                <h3>${schedule.title}</h3>
+                <p>${schedule.description}</p>
+                ${schedule.pic ? `<div class="schedule-pic">${schedule.pic}</div>` : ''}
+            </div>
+        </article>
+    `).join('');
+}
+
+function renderScheduleTicker() {
+    const tickerEl = document.getElementById('schedule-ticker');
+    const tickerTextEl = document.getElementById('schedule-ticker-text');
+    if (!tickerEl || !tickerTextEl) return;
+
+    const tickerSchedules = getActiveSchedules().filter(s => s.show_ticker);
+    if (tickerSchedules.length === 0) {
+        tickerEl.style.display = 'none';
+        return;
+    }
+
+    const text = tickerSchedules.map(s => {
+        const timeStr = s.time ? ` pukul ${s.time} WIB` : '';
+        return `📣 ${s.title} (${formatDateString(s.date)}${timeStr}): ${s.description}`;
+    }).join('   •   ');
+
+    tickerTextEl.textContent = text;
+    tickerEl.style.display = 'flex';
+}
+
+
+// ================= ADMIN LIST RENDERING FUNCTIONS =================
+
+function renderAdminCommitteeList() {
+    const listContainer = document.getElementById('admin-committee-list');
+    if (!listContainer) return;
+
+    materializeCommitteeMembers();
+
+    listContainer.innerHTML = '';
+    if (state.committeeMembers.length === 0) {
+        listContainer.innerHTML = `<div class="empty-state" style="padding:1rem; text-align:center;"><p>Belum ada data pengurus.</p></div>`;
+        return;
+    }
+
+    state.committeeMembers.forEach(member => {
+        const isEditMode = state.editingCommitteeId === member.id;
+        const groupLabel = member.group === 'mosque' ? 'Pengurus Masjid' : 'Remaja Masjid';
+        const avatarSrc = member.photo_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0,2).toUpperCase()}</text></svg>`;
+
+        listContainer.innerHTML += `
+            <div class="admin-content-item" style="${isEditMode ? 'border-color: var(--primary-500); background: var(--primary-50);' : ''}">
+                <div class="admin-content-item-main">
+                    <img class="admin-content-thumb" src="${avatarSrc}" alt="Foto ${member.name}">
+                    <div>
+                        <strong>${member.name}</strong>
+                        <span>${member.role} (${groupLabel})</span>
+                    </div>
+                </div>
+                <div class="admin-content-item-actions">
+                    <button type="button" class="btn-action btn-edit" onclick="editCommitteeMember('${member.id}')" title="Edit Pengurus">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
+                    <button type="button" class="btn-action btn-del" onclick="deleteCommitteeMember('${member.id}')" title="Hapus Pengurus">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderAdminGalleryList() {
+    const listContainer = document.getElementById('admin-gallery-list');
+    if (!listContainer) return;
+
+    materializeGalleryItems();
+
+    listContainer.innerHTML = '';
+    if (state.galleryItems.length === 0) {
+        listContainer.innerHTML = `<div class="empty-state" style="padding:1rem; text-align:center;"><p>Belum ada dokumentasi kegiatan.</p></div>`;
+        return;
+    }
+
+    const sortedItems = [...state.galleryItems].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    sortedItems.forEach(item => {
+        const isEditMode = state.editingGalleryId === item.id;
+        listContainer.innerHTML += `
+            <div class="admin-content-item" style="${isEditMode ? 'border-color: var(--primary-500); background: var(--primary-50);' : ''}">
+                <div class="admin-content-item-main">
+                    <img class="admin-content-thumb" src="${item.image_url}" alt="${item.title}">
+                    <div>
+                        <strong>${item.title}</strong>
+                        <span>${formatDateString(item.date)}</span>
+                    </div>
+                </div>
+                <div class="admin-content-item-actions">
+                    <button type="button" class="btn-action btn-edit" onclick="editGalleryItem('${item.id}')" title="Edit Galeri">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
+                    <button type="button" class="btn-action btn-del" onclick="deleteGalleryItem('${item.id}')" title="Hapus Galeri">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderAdminScheduleList() {
+    const listContainer = document.getElementById('admin-schedule-list');
+    if (!listContainer) return;
+
+    materializeSchedules();
+
+    // Default dates in form to today if empty
+    const scheduleDateInput = document.getElementById('schedule-date');
+    if (scheduleDateInput && !scheduleDateInput.value) {
+        scheduleDateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    listContainer.innerHTML = '';
+    if (state.schedules.length === 0) {
+        listContainer.innerHTML = `<div class="empty-state" style="padding:1rem; text-align:center;"><p>Belum ada jadwal kegiatan.</p></div>`;
+        return;
+    }
+
+    const sortedSchedules = [...state.schedules].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    sortedSchedules.forEach(schedule => {
+        const isEditMode = state.editingScheduleId === schedule.id;
+        const isCompleted = schedule.status === 'completed';
+        
+        let statusBadge = `<span class="badge-in">Aktif</span>`;
+        let actionButtons = `
+            <button type="button" class="btn-action btn-edit" onclick="editSchedule('${schedule.id}')" title="Edit Jadwal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
+            <button type="button" class="btn-action btn-edit" onclick="completeSchedule('${schedule.id}')" title="Tandai Selesai" style="background:var(--success-100); color:var(--success-800);">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </button>
+        `;
+
+        if (isCompleted) {
+            statusBadge = `<span class="badge-out">Selesai</span>`;
+            actionButtons = `
+                <span style="font-size:0.65rem; color:var(--neutral-400); margin-right:4px;">Auto-hapus: ${schedule.auto_delete_at || '-'}</span>
+            `;
+        }
+
+        listContainer.innerHTML += `
+            <div class="admin-content-item" style="${isEditMode ? 'border-color: var(--primary-500); background: var(--primary-50);' : ''} ${isCompleted ? 'opacity: 0.75;' : ''}">
+                <div class="admin-content-item-main">
+                    <div class="admin-content-thumb">${schedule.time || '--:--'}</div>
+                    <div>
+                        <strong>${schedule.title}</strong>
+                        <span>${formatDateString(schedule.date)} | ${statusBadge} ${schedule.show_ticker ? ' | 📣 Ticker' : ''}</span>
+                    </div>
+                </div>
+                <div class="admin-content-item-actions">
+                    ${actionButtons}
+                    <button type="button" class="btn-action btn-del" onclick="deleteSchedule('${schedule.id}')" title="Hapus Jadwal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+
+// ================= ADMIN SUBMISSIONS & CRUD ACTIONS =================
+
+function handleAdminCommitteeSubmit(e) {
+    e.preventDefault();
+    const groupSelect = document.getElementById('committee-group');
+    const roleInput = document.getElementById('committee-role');
+    const nameInput = document.getElementById('committee-name');
+
+    const group = groupSelect.value;
+    const role = roleInput.value.trim();
+    const name = nameInput.value.trim();
+
+    if (!role || !name) return;
+
+    showConfirm(state.editingCommitteeId ? 'Simpan perubahan data pengurus ini?' : 'Tambah data pengurus baru?', () => {
+        materializeCommitteeMembers();
+        
+        const photoUrl = state.tempCommitteePhotoBase64 || (state.editingCommitteeId ? state.committeeMembers.find(m => m.id === state.editingCommitteeId)?.photo_url : null);
+
+        if (state.editingCommitteeId) {
+            const member = state.committeeMembers.find(m => m.id === state.editingCommitteeId);
+            if (member) {
+                member.group = group;
+                member.role = role;
+                member.name = name;
+                member.photo_url = photoUrl;
+            }
+        } else {
+            state.committeeMembers.push({
+                id: 'committee-' + Date.now(),
+                group,
+                role,
+                name,
+                photo_url: photoUrl
+            });
+        }
+
+        touchAdminUpdate();
+        saveState();
+        resetCommitteeForm();
+        renderAdminCommitteeList();
+        renderPublicView();
+        showSuccess(state.editingCommitteeId ? 'Data Diperbarui!' : 'Data Ditambahkan!', 'Data pengurus berhasil disimpan.');
+    }, 'Ya, Simpan', false);
+}
+
+function resetCommitteeForm() {
+    state.editingCommitteeId = null;
+    state.tempCommitteePhotoBase64 = null;
+    document.getElementById('committee-role').value = '';
+    document.getElementById('committee-name').value = '';
+    document.getElementById('committee-photo').value = '';
+    
+    const preview = document.getElementById('committee-photo-preview');
+    if (preview) {
+        preview.className = 'file-upload-preview compact';
+        preview.innerHTML = `<span class="placeholder-text">Belum ada foto dipilih.</span>`;
+    }
+    
+    const submitBtn = document.getElementById('committee-submit-btn');
+    const cancelBtn = document.getElementById('committee-cancel-edit');
+    if (submitBtn) submitBtn.textContent = 'Simpan Data Pengurus';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+function handleAdminGallerySubmit(e) {
+    e.preventDefault();
+    const dateInput = document.getElementById('gallery-date');
+    const titleInput = document.getElementById('gallery-title');
+    const descInput = document.getElementById('gallery-desc');
+
+    const date = dateInput.value;
+    const title = titleInput.value.trim();
+    const description = descInput.value.trim();
+
+    if (!date || !title || !description) return;
+
+    showConfirm(state.editingGalleryId ? 'Simpan perubahan dokumentasi galeri ini?' : 'Tambah dokumentasi galeri baru?', () => {
+        materializeGalleryItems();
+
+        const imageUrl = state.tempGalleryImageBase64 || (state.editingGalleryId ? state.galleryItems.find(g => g.id === state.editingGalleryId)?.image_url : null) || createDemoGalleryImage(title, '#0f766e', '#15803d');
+
+        if (state.editingGalleryId) {
+            const item = state.galleryItems.find(g => g.id === state.editingGalleryId);
+            if (item) {
+                item.date = date;
+                item.title = title;
+                item.description = description;
+                item.image_url = imageUrl;
+            }
+        } else {
+            state.galleryItems.push({
+                id: 'gallery-' + Date.now(),
+                date,
+                title,
+                description,
+                image_url: imageUrl
+            });
+        }
+
+        state.activeGalleryIndex = 0;
+        touchAdminUpdate();
+        saveState();
+        resetGalleryForm();
+        renderAdminGalleryList();
+        renderPublicView();
+        showSuccess(state.editingGalleryId ? 'Galeri Diperbarui!' : 'Galeri Ditambahkan!', 'Dokumentasi kegiatan berhasil disimpan.');
+    }, 'Ya, Simpan', false);
+}
+
+function resetGalleryForm() {
+    state.editingGalleryId = null;
+    state.tempGalleryImageBase64 = null;
+    document.getElementById('gallery-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('gallery-title').value = '';
+    document.getElementById('gallery-desc').value = '';
+    document.getElementById('gallery-image').value = '';
+
+    const preview = document.getElementById('gallery-image-preview');
+    if (preview) {
+        preview.className = 'file-upload-preview compact';
+        preview.innerHTML = `<span class="placeholder-text">Belum ada foto dipilih.</span>`;
+    }
+
+    const submitBtn = document.getElementById('gallery-submit-btn');
+    const cancelBtn = document.getElementById('gallery-cancel-edit');
+    if (submitBtn) submitBtn.textContent = 'Simpan Galeri';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+function handleAdminScheduleSubmit(e) {
+    e.preventDefault();
+    const dateInput = document.getElementById('schedule-date');
+    const timeInput = document.getElementById('schedule-time');
+    const titleInput = document.getElementById('schedule-title');
+    const descInput = document.getElementById('schedule-desc');
+    const picInput = document.getElementById('schedule-pic');
+    const tickerCheck = document.getElementById('schedule-ticker-check');
+
+    const date = dateInput.value;
+    const time = timeInput.value;
+    const title = titleInput.value.trim();
+    const description = descInput.value.trim();
+    const pic = picInput.value.trim();
+    const showTicker = tickerCheck.checked;
+
+    if (!date || !time || !title || !description) return;
+
+    showConfirm(state.editingScheduleId ? 'Simpan perubahan jadwal kegiatan ini?' : 'Tambah jadwal kegiatan baru?', () => {
+        materializeSchedules();
+
+        if (state.editingScheduleId) {
+            const schedule = state.schedules.find(item => item.id === state.editingScheduleId);
+            if (schedule) {
+                schedule.date = date;
+                schedule.time = time;
+                schedule.title = title;
+                schedule.description = description;
+                schedule.pic = pic;
+                schedule.show_ticker = showTicker;
+            }
+        } else {
+            state.schedules.push({
+                id: 'schedule-' + Date.now(),
+                date,
+                time,
+                title,
+                description,
+                pic,
+                show_ticker: showTicker,
+                status: 'active',
+                completed_at: null,
+                auto_delete_at: null
+            });
+        }
+        touchAdminUpdate();
+        saveState();
+        resetScheduleForm();
+        renderAdminScheduleList();
+        renderPublicView();
+        showSuccess(state.editingScheduleId ? 'Jadwal Diperbarui!' : 'Jadwal Ditambahkan!', 'Jadwal kegiatan berhasil disimpan.');
+    }, 'Ya, Simpan', false);
+}
+
+function resetScheduleForm() {
+    state.editingScheduleId = null;
+    document.getElementById('schedule-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('schedule-time').value = '';
+    document.getElementById('schedule-title').value = '';
+    document.getElementById('schedule-desc').value = '';
+    document.getElementById('schedule-pic').value = '';
+    document.getElementById('schedule-ticker-check').checked = true;
+
+    const submitBtn = document.getElementById('schedule-submit-btn');
+    const cancelBtn = document.getElementById('schedule-cancel-edit');
+    if (submitBtn) submitBtn.textContent = 'Simpan Jadwal';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+window.editCommitteeMember = function(id) {
+    materializeCommitteeMembers();
+    const member = state.committeeMembers.find(item => item.id === id);
+    if (!member) return;
+
+    state.editingCommitteeId = id;
+    state.tempCommitteePhotoBase64 = null;
+    document.getElementById('committee-group').value = member.group;
+    document.getElementById('committee-name').value = member.name;
+    document.getElementById('committee-role').value = member.role;
+
+    const preview = document.getElementById('committee-photo-preview');
+    if (preview) {
+        if (member.photo_url) {
+            preview.className = 'file-upload-preview compact has-image';
+            preview.innerHTML = `<img src="${member.photo_url}" alt="Foto ${member.name}">`;
+        } else {
+            preview.className = 'file-upload-preview compact';
+            preview.innerHTML = `<span class="placeholder-text">Foto lama kosong. Pilih file jika ingin menambahkan foto.</span>`;
+        }
+    }
+    const submitBtn = document.getElementById('committee-submit-btn');
+    const cancelBtn = document.getElementById('committee-cancel-edit');
+    if (submitBtn) submitBtn.textContent = 'Simpan Perubahan';
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+    document.getElementById('admin-committee-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.editGalleryItem = function(id) {
+    materializeGalleryItems();
+    const item = state.galleryItems.find(gallery => gallery.id === id);
+    if (!item) return;
+
+    state.editingGalleryId = id;
+    state.tempGalleryImageBase64 = null;
+    document.getElementById('gallery-date').value = item.date;
+    document.getElementById('gallery-title').value = item.title;
+    document.getElementById('gallery-desc').value = item.description;
+
+    const preview = document.getElementById('gallery-image-preview');
+    if (preview) {
+        if (item.image_url) {
+            preview.className = 'file-upload-preview compact has-image';
+            preview.innerHTML = `<img src="${item.image_url}" alt="${item.title}">`;
+        } else {
+            preview.className = 'file-upload-preview compact';
+            preview.innerHTML = `<span class="placeholder-text">Foto lama kosong. Pilih file jika ingin menambahkan foto.</span>`;
+        }
+    }
+    const submitBtn = document.getElementById('gallery-submit-btn');
+    const cancelBtn = document.getElementById('gallery-cancel-edit');
+    if (submitBtn) submitBtn.textContent = 'Simpan Perubahan';
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+    document.getElementById('admin-gallery-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.deleteCommitteeMember = function(id) {
+    showConfirm('Hapus data pengurus ini dari halaman struktur?', () => {
+        materializeCommitteeMembers();
+        state.committeeMembers = state.committeeMembers.filter(member => member.id !== id);
+        if (state.editingCommitteeId === id) resetCommitteeForm();
+        touchAdminUpdate();
+        saveState();
+        renderAdminCommitteeList();
+        renderPublicView();
+        showToast('Data pengurus berhasil dihapus.');
+    });
+};
+
+window.deleteGalleryItem = function(id) {
+    showConfirm('Hapus dokumentasi kegiatan ini dari galeri?', () => {
+        materializeGalleryItems();
+        state.galleryItems = state.galleryItems.filter(item => item.id !== id);
+        if (state.editingGalleryId === id) resetGalleryForm();
+        state.activeGalleryIndex = 0;
+        touchAdminUpdate();
+        saveState();
+        renderAdminGalleryList();
+        renderPublicView();
+        showToast('Galeri berhasil dihapus.');
+    });
+};
+
+window.editSchedule = function(id) {
+    materializeSchedules();
+    const schedule = state.schedules.find(item => item.id === id);
+    if (!schedule) return;
+
+    state.editingScheduleId = id;
+    document.getElementById('schedule-date').value = schedule.date;
+    document.getElementById('schedule-time').value = schedule.time;
+    document.getElementById('schedule-title').value = schedule.title;
+    document.getElementById('schedule-desc').value = schedule.description;
+    document.getElementById('schedule-pic').value = schedule.pic || '';
+    document.getElementById('schedule-ticker-check').checked = !!schedule.show_ticker;
+    const submitBtn = document.getElementById('schedule-submit-btn');
+    const cancelBtn = document.getElementById('schedule-cancel-edit');
+    if (submitBtn) submitBtn.textContent = 'Simpan Perubahan';
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+    document.getElementById('admin-schedule-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.completeSchedule = function(id) {
+    showConfirm('Tandai jadwal ini sebagai selesai? Jadwal selesai akan otomatis dibersihkan setelah 7 hari.', () => {
+        materializeSchedules();
+        const schedule = state.schedules.find(item => item.id === id);
+        if (!schedule) return;
+        const today = new Date().toISOString().split('T')[0];
+        schedule.status = 'completed';
+        schedule.completed_at = today;
+        schedule.auto_delete_at = addDaysToDateString(today, 7);
+        schedule.show_ticker = false;
+        touchAdminUpdate();
+        saveState();
+        renderAdminScheduleList();
+        renderPublicView();
+        showSuccess('Jadwal Selesai!', 'Jadwal tidak lagi tampil di halaman jamaah dan akan dibersihkan otomatis setelah 7 hari.');
+    }, 'Ya, Selesai', false);
+};
+
+window.deleteSchedule = function(id) {
+    showConfirm('Hapus jadwal kegiatan ini?', () => {
+        materializeSchedules();
+        state.schedules = state.schedules.filter(schedule => schedule.id !== id);
+        if (state.editingScheduleId === id) resetScheduleForm();
+        touchAdminUpdate();
+        saveState();
+        renderAdminScheduleList();
+        renderPublicView();
+        showToast('Jadwal berhasil dihapus.');
+    });
+};
+
 // ================= EVENT LISTENER INITIALIZATIONS =================
 document.addEventListener('DOMContentLoaded', () => {
     if (firebaseReady) {
@@ -2050,6 +2805,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // 10. Admin Form Submissions
     document.getElementById('admin-tx-form').addEventListener('submit', handleAdminTxSubmit);
     document.getElementById('admin-project-form').addEventListener('submit', handleAdminProjectSubmit);
+    document.getElementById('admin-committee-form')?.addEventListener('submit', handleAdminCommitteeSubmit);
+    document.getElementById('admin-gallery-form')?.addEventListener('submit', handleAdminGallerySubmit);
+    document.getElementById('admin-schedule-form')?.addEventListener('submit', handleAdminScheduleSubmit);
+    document.getElementById('committee-cancel-edit')?.addEventListener('click', resetCommitteeForm);
+    document.getElementById('gallery-cancel-edit')?.addEventListener('click', resetGalleryForm);
+    document.getElementById('schedule-cancel-edit')?.addEventListener('click', resetScheduleForm);
+
+    document.getElementById('gallery-filter-month')?.addEventListener('change', () => {
+        state.activeGalleryIndex = 0;
+        renderPublicGallery();
+    });
+    document.getElementById('gallery-filter-year')?.addEventListener('change', () => {
+        state.activeGalleryIndex = 0;
+        renderPublicGallery();
+    });
+
+    const committeePhotoInput = document.getElementById('committee-photo');
+    const committeePhotoPreview = document.getElementById('committee-photo-preview');
+    if (committeePhotoInput && committeePhotoPreview) {
+        committeePhotoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                state.tempCommitteePhotoBase64 = evt.target.result;
+                committeePhotoPreview.className = 'file-upload-preview compact has-image';
+                committeePhotoPreview.innerHTML = `<img src="${state.tempCommitteePhotoBase64}" alt="Pratinjau Foto Pengurus">`;
+                showToast('Foto pengurus siap disimpan.');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    const galleryImageInput = document.getElementById('gallery-image');
+    const galleryImagePreview = document.getElementById('gallery-image-preview');
+    if (galleryImageInput && galleryImagePreview) {
+        galleryImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                state.tempGalleryImageBase64 = evt.target.result;
+                galleryImagePreview.className = 'file-upload-preview compact has-image';
+                galleryImagePreview.innerHTML = `<img src="${state.tempGalleryImageBase64}" alt="Pratinjau Foto Kegiatan">`;
+                showToast('Foto kegiatan siap disimpan.');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     // 12. File input reader for receipts (Base64 conversion)
     const receiptInput = document.getElementById('tx-receipt');
@@ -2155,3 +2959,16 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('afterprint', () => {
     schedulePrintModeCleanup();
 });
+
+window.prevGalleryItem = function() {
+    const items = getFilteredGalleryItems();
+    if (items.length <= 1) return;
+    state.activeGalleryIndex = (state.activeGalleryIndex - 1 + items.length) % items.length;
+    renderPublicGallery();
+};
+window.nextGalleryItem = function() {
+    const items = getFilteredGalleryItems();
+    if (items.length <= 1) return;
+    state.activeGalleryIndex = (state.activeGalleryIndex + 1) % items.length;
+    renderPublicGallery();
+};
