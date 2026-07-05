@@ -2157,13 +2157,9 @@ function renderPublicCommittee() {
         const avatarSrc = member.photo_url || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
         return `
             <div class="committee-card">
-                <div class="committee-avatar-wrapper">
-                    <img class="committee-avatar" src="${avatarSrc}" alt="Foto ${member.name}">
-                </div>
-                <div class="committee-info">
-                    <h4>${member.name}</h4>
-                    <p>${member.role}</p>
-                </div>
+                <img class="committee-photo" src="${avatarSrc}" alt="Foto ${member.name}">
+                <h3>${member.name}</h3>
+                <p>${member.role}</p>
             </div>
         `;
     };
@@ -2878,6 +2874,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (screenId) {
             btn.addEventListener('click', () => navigateAdminMoreScreen(screenId));
         }
+    });
+
+    // Committee group tabs
+    document.querySelectorAll('[data-committee-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-committee-tab');
+            document.querySelectorAll('[data-committee-tab]').forEach(tab => tab.classList.toggle('active', tab === btn));
+            document.querySelectorAll('.committee-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === `committee-panel-${target}`);
+            });
+        });
     });
 
     // 10. Admin Form Submissions
