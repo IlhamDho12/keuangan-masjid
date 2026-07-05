@@ -561,6 +561,49 @@ function switchMode(mode) {
     }
 }
 
+// More Menu Sheet Helpers
+function openPublicMoreSheet() {
+    const sheet = document.getElementById('public-more-sheet');
+    if (sheet) {
+        sheet.classList.add('active');
+        sheet.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function closePublicMoreSheet() {
+    const sheet = document.getElementById('public-more-sheet');
+    if (sheet) {
+        sheet.classList.remove('active');
+        sheet.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function navigatePublicMoreScreen(screenId) {
+    closePublicMoreSheet();
+    switchAppScreen(screenId, 'public');
+}
+
+function openAdminMoreSheet() {
+    const sheet = document.getElementById('admin-more-sheet');
+    if (sheet) {
+        sheet.classList.add('active');
+        sheet.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function closeAdminMoreSheet() {
+    const sheet = document.getElementById('admin-more-sheet');
+    if (sheet) {
+        sheet.classList.remove('active');
+        sheet.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function navigateAdminMoreScreen(screenId) {
+    closeAdminMoreSheet();
+    switchAppScreen(screenId, 'admin');
+}
+
 // Switch Bottom Navigation Screen
 function switchAppScreen(screenId, group) {
     // Hide all screens in the group
@@ -2792,14 +2835,43 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', (e) => {
             const targetBtn = e.currentTarget;
             const screenId = targetBtn.getAttribute('data-screen');
-            // Determine group based on the targetBtn parent
             const isPublic = targetBtn.closest('#bottom-nav-public') !== null;
+            
+            // "Lainnya" button — no data-screen, opens the more sheet
+            if (!screenId) {
+                if (isPublic) {
+                    openPublicMoreSheet();
+                } else {
+                    openAdminMoreSheet();
+                }
+                return;
+            }
+            
             if (isPublic) {
                 switchAppScreen(screenId, 'public');
             } else {
                 switchAppScreen(screenId, 'admin');
             }
         });
+    });
+
+    // Wire up More Menu Sheet listeners
+    document.getElementById('public-more-backdrop')?.addEventListener('click', closePublicMoreSheet);
+    document.getElementById('close-public-more')?.addEventListener('click', closePublicMoreSheet);
+    document.querySelectorAll('#public-more-sheet .more-sheet-option').forEach(btn => {
+        const screenId = btn.getAttribute('data-screen');
+        if (screenId) {
+            btn.addEventListener('click', () => navigatePublicMoreScreen(screenId));
+        }
+    });
+
+    document.getElementById('admin-more-backdrop')?.addEventListener('click', closeAdminMoreSheet);
+    document.getElementById('close-admin-more')?.addEventListener('click', closeAdminMoreSheet);
+    document.querySelectorAll('#admin-more-sheet .more-sheet-option').forEach(btn => {
+        const screenId = btn.getAttribute('data-admin-screen');
+        if (screenId) {
+            btn.addEventListener('click', () => navigateAdminMoreScreen(screenId));
+        }
     });
 
     // 10. Admin Form Submissions
