@@ -670,10 +670,7 @@ function renderPublicView() {
     // Last Updated Timestamp
     const lastUpdatedEl = document.getElementById('pub-last-updated');
     if (lastUpdatedEl) {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        lastUpdatedEl.textContent = `🕐 Data terakhir dimuat: ${dateStr}, pukul ${timeStr} WIB`;
+        lastUpdatedEl.textContent = formatAdminUpdatedAt();
     }
 
     // Populate year filter dropdowns dynamically from actual transaction data
@@ -2190,19 +2187,6 @@ function renderPublicCommittee() {
 
     mosqueContainer.innerHTML = mosqueMembers.map(renderCard).join('');
     youthContainer.innerHTML = youthMembers.map(renderCard).join('');
-
-    let updateEl = document.getElementById('public-committee-updated-time');
-    if (!updateEl) {
-        updateEl = document.createElement('div');
-        updateEl.id = 'public-committee-updated-time';
-        updateEl.style.fontSize = '0.65rem';
-        updateEl.style.color = 'var(--neutral-500)';
-        updateEl.style.textAlign = 'center';
-        updateEl.style.marginTop = '1.5rem';
-        updateEl.style.width = '100%';
-        mosqueContainer.parentElement.parentElement.appendChild(updateEl);
-    }
-    updateEl.textContent = formatAdminUpdatedAt();
 }
 
 function renderPublicGallery() {
@@ -2254,19 +2238,6 @@ function renderPublicGallery() {
             </div>
         </div>
     `;
-
-    let updateEl = document.getElementById('public-gallery-updated-time');
-    if (!updateEl) {
-        updateEl = document.createElement('div');
-        updateEl.id = 'public-gallery-updated-time';
-        updateEl.style.fontSize = '0.65rem';
-        updateEl.style.color = 'var(--neutral-500)';
-        updateEl.style.textAlign = 'center';
-        updateEl.style.marginTop = '1.5rem';
-        updateEl.style.width = '100%';
-        container.parentElement.appendChild(updateEl);
-    }
-    updateEl.textContent = formatAdminUpdatedAt();
 }
 
 window.prevGalleryItem = function() {
@@ -2307,19 +2278,6 @@ function renderPublicSchedules() {
             </div>
         </article>
     `).join('');
-
-    let updateEl = document.getElementById('public-schedule-updated-time');
-    if (!updateEl) {
-        updateEl = document.createElement('div');
-        updateEl.id = 'public-schedule-updated-time';
-        updateEl.style.fontSize = '0.65rem';
-        updateEl.style.color = 'var(--neutral-500)';
-        updateEl.style.textAlign = 'center';
-        updateEl.style.marginTop = '1.5rem';
-        updateEl.style.width = '100%';
-        container.parentElement.appendChild(updateEl);
-    }
-    updateEl.textContent = formatAdminUpdatedAt();
 }
 
 function renderScheduleTicker() {
@@ -2390,7 +2348,7 @@ function renderAdminCommitteeList() {
         html += `</div>`;
     }
 
-    html += `<h3 style="font-size:0.85rem; font-weight:700; color:var(--primary-900); margin:0 0 0.5rem 0; border-left: 3px solid var(--primary-600); padding-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Remaja Masjid (IRMA)</h3>`;
+    html += `<h3 style="font-size:0.85rem; font-weight:700; color:var(--primary-900); margin:0 0 0.5rem 0; border-left: 3px solid var(--primary-600); padding-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Remaja Masjid</h3>`;
     if (youthMembers.length === 0) {
         html += `<div class="empty-state" style="padding:0.75rem; text-align:center;"><p style="font-size:0.75rem; margin:0; color:var(--neutral-400);">Belum ada data remaja masjid.</p></div>`;
     } else {
