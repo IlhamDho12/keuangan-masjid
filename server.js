@@ -9,6 +9,13 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
 // Serve frontend static files
 app.use(express.static(path.join(__dirname)));
 app.use('/vendor', express.static(path.join(__dirname, 'node_modules', 'jspdf', 'dist')));

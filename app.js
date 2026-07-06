@@ -43,6 +43,28 @@ const createDemoGalleryImage = (title, primary, secondary) => (
     `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${primary}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="900" height="560" fill="url(#g)"/><circle cx="740" cy="120" r="90" fill="rgba(255,255,255,.16)"/><circle cx="130" cy="450" r="130" fill="rgba(255,255,255,.12)"/><rect x="95" y="95" width="710" height="370" rx="34" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.35)" stroke-width="3"/><text x="450" y="265" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800" fill="white">${title}</text><text x="450" y="320" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600" fill="rgba(255,255,255,.82)">Masjid Raudhatul Khoiriyah</text></svg>`)}`
 );
 
+function compressImageFile(file, maxSize = 1280, quality = 0.78) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
+        reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('File gambar tidak bisa diproses.'));
+            img.onload = () => {
+                const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 const INITIAL_COMMITTEE_MEMBERS = [
     { id: 'committee-mosque-chair', group: 'mosque', name: 'Supriyadi', role: 'Ketua', photo_url: null },
     { id: 'committee-mosque-secretary', group: 'mosque', name: 'Dr. Rahmad', role: 'Sekretaris', photo_url: null },
@@ -130,7 +152,6 @@ function getSettingsState() {
         bankAccountHolder: state.bankAccountHolder,
         whatsappNumber: state.whatsappNumber,
         committeeMembers: state.committeeMembers,
-        galleryItems: state.galleryItems,
         schedules: state.schedules,
         lastAdminUpdatedAt: state.lastAdminUpdatedAt
     };
@@ -141,6 +162,7 @@ function getFullStateSnapshot() {
         transactions: state.transactions,
         projects: state.projects,
         feedbacks: state.feedbacks,
+        galleryItems: state.galleryItems,
         ...getSettingsState()
     };
 }
@@ -165,6 +187,39 @@ function applyLoadedState(parsed, includeFeedbacks = true) {
     state.lastAdminUpdatedAt = parsed.lastAdminUpdatedAt || null;
 }
 
+function getLocalFallbackState() {
+    const localData = localStorage.getItem('masjid_finance_state_v4') || localStorage.getItem('masjid_finance_state_v3');
+    if (!localData) return null;
+    try {
+        return JSON.parse(localData);
+    } catch (err) {
+        console.error('Error parsing local fallback state', err);
+        return null;
+    }
+}
+
+function mergeLocalGalleryFallback() {
+    const localState = getLocalFallbackState();
+    if (!localState || !Array.isArray(localState.galleryItems)) return;
+
+    const localLastUpdated = localState.lastAdminUpdatedAt || '';
+    const remoteLastUpdated = state.lastAdminUpdatedAt || '';
+    if (!localLastUpdated || localLastUpdated <= remoteLastUpdated) return;
+
+    const mergedById = new Map((state.galleryItems || []).map(item => [item.id, item]));
+    localState.galleryItems.forEach(localItem => {
+        if (!localItem || !localItem.id) return;
+        const remoteItem = mergedById.get(localItem.id);
+        const localUpdated = localItem.updated_at || '';
+        const remoteUpdated = remoteItem?.updated_at || '';
+        if (!remoteItem || (localUpdated && localUpdated > remoteUpdated)) {
+            mergedById.set(localItem.id, localItem);
+        }
+    });
+
+    state.galleryItems = Array.from(mergedById.values());
+}
+
 async function getCollectionData(collectionName) {
     const snapshot = await firestoreDb.collection(collectionName).get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -186,9 +241,10 @@ async function replaceCollection(batch, collectionName, items) {
 }
 
 async function loadStateFromFirestore(includeFeedbacks) {
-    const [transactions, projects, settingsDoc] = await Promise.all([
+    const [transactions, projects, galleryItems, settingsDoc] = await Promise.all([
         getCollectionData('transactions'),
         getCollectionData('projects'),
+        getCollectionData('galleryItems'),
         firestoreDb.collection('settings').doc(APP_SETTINGS_DOC).get()
     ]);
 
@@ -201,8 +257,10 @@ async function loadStateFromFirestore(includeFeedbacks) {
         transactions: transactions.length ? transactions : INITIAL_TRANSACTIONS,
         projects: projects.length ? projects : INITIAL_PROJECTS,
         feedbacks,
-        ...(settingsDoc.exists ? settingsDoc.data() : {})
+        ...(settingsDoc.exists ? settingsDoc.data() : {}),
+        galleryItems: galleryItems.length ? galleryItems : (settingsDoc.exists ? settingsDoc.data().galleryItems : undefined)
     }, includeFeedbacks);
+    mergeLocalGalleryFallback();
 }
 
 // Save state to Firestore, with localStorage fallback for offline preview.
@@ -214,8 +272,10 @@ async function saveState() {
         await replaceCollection(batch, 'transactions', state.transactions);
         await replaceCollection(batch, 'projects', state.projects);
         await replaceCollection(batch, 'feedbacks', state.feedbacks);
+        await replaceCollection(batch, 'galleryItems', state.galleryItems);
         batch.set(firestoreDb.collection('settings').doc(APP_SETTINGS_DOC), getSettingsState());
         await batch.commit();
+        localStorage.setItem('masjid_finance_state_v4', JSON.stringify(getFullStateSnapshot()));
         console.log('State saved to Firestore successfully.');
     } catch (e) {
         console.warn('Firestore unavailable, saving state to localStorage fallback.', e);
@@ -2246,11 +2306,11 @@ function renderPublicGallery() {
     const activeItem = items[state.activeGalleryIndex];
     
     container.innerHTML = `
-        <div class="gallery-carousel-card" onclick="viewGalleryDetail()" style="cursor: pointer;">
+        <div class="gallery-carousel-card">
             <div class="gallery-carousel-media">
-                <img src="${activeItem.image_url}" alt="${activeItem.title}" class="gallery-carousel-image">
-                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn prev" onclick="prevGalleryItem(event)">❮</button>` : ''}
-                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn next" onclick="nextGalleryItem(event)">❯</button>` : ''}
+                <img src="${activeItem.image_url}" alt="${activeItem.title}" class="gallery-carousel-image" onclick="viewGalleryDetail()" style="cursor: zoom-in;">
+                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn prev" onclick="prevGalleryItem(event)">&lt;</button>` : ''}
+                ${items.length > 1 ? `<button type="button" class="gallery-nav-btn next" onclick="nextGalleryItem(event)">&gt;</button>` : ''}
             </div>
             <div class="gallery-carousel-body">
                 <span class="gallery-date">${formatDateString(activeItem.date)}</span>
@@ -2561,18 +2621,20 @@ function handleAdminGallerySubmit(e) {
 
     if (!date || !title || !description) return;
 
-    showConfirm(state.editingGalleryId ? 'Simpan perubahan dokumentasi galeri ini?' : 'Tambah dokumentasi galeri baru?', () => {
+    const isEditingGallery = Boolean(state.editingGalleryId);
+    showConfirm(isEditingGallery ? 'Simpan perubahan dokumentasi galeri ini?' : 'Tambah dokumentasi galeri baru?', async () => {
         materializeGalleryItems();
 
-        const imageUrl = state.tempGalleryImageBase64 || (state.editingGalleryId ? state.galleryItems.find(g => g.id === state.editingGalleryId)?.image_url : null) || createDemoGalleryImage(title, '#0f766e', '#15803d');
+        const imageUrl = state.tempGalleryImageBase64 || (isEditingGallery ? state.galleryItems.find(g => g.id === state.editingGalleryId)?.image_url : null) || createDemoGalleryImage(title, '#0f766e', '#15803d');
 
-        if (state.editingGalleryId) {
+        if (isEditingGallery) {
             const item = state.galleryItems.find(g => g.id === state.editingGalleryId);
             if (item) {
                 item.date = date;
                 item.title = title;
                 item.description = description;
                 item.image_url = imageUrl;
+                item.updated_at = new Date().toISOString();
             }
         } else {
             state.galleryItems.push({
@@ -2580,17 +2642,18 @@ function handleAdminGallerySubmit(e) {
                 date,
                 title,
                 description,
-                image_url: imageUrl
+                image_url: imageUrl,
+                updated_at: new Date().toISOString()
             });
         }
 
         state.activeGalleryIndex = 0;
         touchAdminUpdate();
-        saveState();
+        await saveState();
         resetGalleryForm();
         renderAdminGalleryList();
         renderPublicView();
-        showSuccess(state.editingGalleryId ? 'Galeri Diperbarui!' : 'Galeri Ditambahkan!', 'Dokumentasi kegiatan berhasil disimpan.');
+        showSuccess(isEditingGallery ? 'Galeri Diperbarui!' : 'Galeri Ditambahkan!', 'Dokumentasi kegiatan berhasil disimpan.');
     }, 'Ya, Simpan', false);
 }
 
@@ -2883,10 +2946,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-committee-detail-modal')?.addEventListener('click', () => {
         document.getElementById('modal-committee-detail').classList.remove('active');
     });
-    document.getElementById('close-gallery-detail-modal')?.addEventListener('click', () => {
-        document.getElementById('modal-gallery-detail').classList.remove('active');
-    });
-
     // Click outside modal content close trigger
     window.addEventListener('click', (e) => {
         const modalQris = document.getElementById('modal-qris');
@@ -2997,17 +3056,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryImageInput = document.getElementById('gallery-image');
     const galleryImagePreview = document.getElementById('gallery-image-preview');
     if (galleryImageInput && galleryImagePreview) {
-        galleryImageInput.addEventListener('change', (e) => {
+        galleryImageInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                state.tempGalleryImageBase64 = evt.target.result;
+            try {
+                state.tempGalleryImageBase64 = await compressImageFile(file);
                 galleryImagePreview.className = 'file-upload-preview compact has-image';
                 galleryImagePreview.innerHTML = `<img src="${state.tempGalleryImageBase64}" alt="Pratinjau Foto Kegiatan">`;
                 showToast('Foto kegiatan siap disimpan.');
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                console.error(err);
+                showToast('Foto kegiatan gagal diproses. Coba pilih gambar lain.');
+                galleryImageInput.value = '';
+            }
         });
     }
 
@@ -3126,19 +3187,6 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('afterprint', () => {
     schedulePrintModeCleanup();
 });
-
-window.prevGalleryItem = function() {
-    const items = getFilteredGalleryItems();
-    if (items.length <= 1) return;
-    state.activeGalleryIndex = (state.activeGalleryIndex - 1 + items.length) % items.length;
-    renderPublicGallery();
-};
-window.nextGalleryItem = function() {
-    const items = getFilteredGalleryItems();
-    if (items.length <= 1) return;
-    state.activeGalleryIndex = (state.activeGalleryIndex + 1) % items.length;
-    renderPublicGallery();
-};
 
 function openCropModal(file, callback) {
     const reader = new FileReader();
