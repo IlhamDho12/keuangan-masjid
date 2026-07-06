@@ -65,6 +65,8 @@ node_modules/
 
 # dotenv environment variables file
 .env
+*.service-account.json
+.firebase-github-actions-key.json
 
 # Local AI agent skills installed by Firebase CLI
 .agents/
