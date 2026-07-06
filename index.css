@@ -175,12 +175,12 @@ input:focus, select:focus, textarea:focus {
     position: fixed;
     top: 0; left: 0; right: 0;
     height: 60px;
-    background-color: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfefc 100%);
     border-bottom: 1px solid var(--neutral-200);
     z-index: 1000;
     display: flex;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 .app-header-inner {
     width: 100%;
@@ -197,24 +197,45 @@ input:focus, select:focus, textarea:focus {
     gap: 0.5rem;
 }
 .header-logo {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
     object-fit: cover;
+    padding: 0.12rem;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(245, 158, 11, 0.14));
+    border: 1px solid rgba(15, 118, 110, 0.18);
+    box-shadow: 0 4px 12px rgba(6, 95, 70, 0.12);
 }
 .header-title {
     display: flex;
     flex-direction: column;
 }
 .header-mosque-name {
+    position: relative;
+    width: fit-content;
     font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--primary-900);
-    line-height: 1.1;
+    font-weight: 800;
+    color: #065f46;
+    line-height: 1.08;
+    letter-spacing: 0;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+.header-mosque-name::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 2px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%);
+    opacity: 0.9;
 }
 .header-subtitle {
     font-size: 0.7rem;
-    color: var(--neutral-500);
+    color: #64748b;
+    margin-top: 0.16rem;
+    line-height: 1.15;
 }
 .header-actions {
     display: flex;
@@ -236,6 +257,46 @@ input:focus, select:focus, textarea:focus {
     transition: var(--transition-base);
 }
 .header-action-btn:hover { background: var(--neutral-200); }
+.header-action-btn:active {
+    transform: translateY(1px) scale(0.97);
+}
+#btn-go-admin {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 253, 250, 0.98));
+    border-color: rgba(15, 118, 110, 0.22);
+    color: #064e3b;
+    box-shadow: 0 6px 18px rgba(15, 118, 110, 0.12);
+}
+#btn-go-admin svg {
+    color: #065f46;
+    transition: transform 180ms ease, color 180ms ease;
+}
+#btn-go-admin::after {
+    content: "";
+    position: absolute;
+    inset: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.18);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+}
+#btn-go-admin:hover {
+    background: linear-gradient(135deg, #d1fae5, #ccfbf1);
+    border-color: rgba(15, 118, 110, 0.38);
+    box-shadow: 0 8px 22px rgba(15, 118, 110, 0.18);
+}
+#btn-go-admin:hover svg {
+    transform: translateY(-1px);
+}
+#btn-go-admin:active::after {
+    animation: adminBtnRipple 420ms ease-out;
+}
+#btn-go-admin:active svg {
+    animation: adminLockPress 360ms ease;
+}
 .header-action-btn.btn-logout {
     color: var(--danger-600);
     background: #fee2e2;
@@ -249,6 +310,25 @@ input:focus, select:focus, textarea:focus {
     padding: 0.2rem 0.5rem 0.2rem 0.2rem;
     border-radius: var(--radius-full);
     border: 1px solid var(--primary-500);
+}
+
+@keyframes adminBtnRipple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.9;
+    }
+    100% {
+        width: 160px;
+        height: 160px;
+        opacity: 0;
+    }
+}
+
+@keyframes adminLockPress {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    35% { transform: translateY(1px) rotate(-7deg); }
+    70% { transform: translateY(-1px) rotate(5deg); }
 }
 .admin-avatar-mini {
     width: 24px;
@@ -913,9 +993,9 @@ input:focus, select:focus, textarea:focus {
 /* Auth Screen */
 .auth-screen { display: flex; align-items: center; justify-content: center; padding: 1rem; height: 100vh; /* Full viewport height for auth */ background: linear-gradient(135deg, var(--neutral-100) 0%, var(--primary-100) 100%); }
 .auth-box { background: #fff; padding: 2rem; border-radius: var(--radius-lg); width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); text-align: center; border: 1px solid rgba(255,255,255,0.5); }
-.auth-icon { width: 64px; height: 64px; background: var(--primary-100); color: var(--primary-700); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
-.auth-icon svg { width: 32px; height: 32px; }
-.auth-box h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.auth-icon { width: 72px; height: 72px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(245, 158, 11, 0.14)); color: var(--primary-700); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 1px solid rgba(15, 118, 110, 0.18); box-shadow: 0 10px 28px rgba(6, 95, 70, 0.14); }
+.auth-icon img { width: 58px; height: 58px; object-fit: contain; border-radius: 50%; }
+.auth-box h2 { font-size: 1.45rem; margin-bottom: 1.25rem; color: var(--primary-900); }
 .auth-box p { font-size: 0.85rem; color: var(--neutral-500); margin-bottom: 1.5rem; }
 .auth-box.login-error { animation: loginShake 0.42s ease both; }
 .auth-box.login-error #admin-password { border-color: var(--danger-600); box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12); }

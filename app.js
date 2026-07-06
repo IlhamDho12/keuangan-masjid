@@ -609,7 +609,7 @@ function switchMode(mode) {
         document.getElementById('btn-go-admin').style.display = 'none';
         document.getElementById('btn-admin-logout').style.display = 'none';
         document.getElementById('admin-header-profile').style.display = 'none';
-        document.getElementById('header-subtitle').textContent = 'Login Admin';
+        document.getElementById('header-subtitle').textContent = 'Pendopo, Empat Lawang, Sumatera Selatan';
     } else if (mode === 'admin') {
         state.currentRole = 'admin';
         document.getElementById('screens-admin').classList.add('active');
@@ -1782,7 +1782,7 @@ async function handleAdminLogin(e) {
     } catch (err) {
         console.error('Admin login failed', err);
         const authMessage = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password'
-            ? 'PIN atau kata sandi salah.'
+            ? 'Password salah.'
             : 'Login gagal. Coba ulang atau refresh halaman.';
         showLoginError(authMessage);
         showToast(authMessage, 'error');
