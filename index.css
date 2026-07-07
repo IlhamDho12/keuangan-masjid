@@ -533,6 +533,10 @@ input:focus, select:focus, textarea:focus {
     cursor: pointer;
     transition: var(--transition-base);
 }
+.more-sheet-option > span:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+}
 .more-sheet-option:hover {
     border-color: var(--primary-300);
     background: var(--primary-50);
@@ -567,6 +571,20 @@ input:focus, select:focus, textarea:focus {
     color: var(--neutral-500);
     font-size: 0.72rem;
     line-height: 1.3;
+}
+.more-option-badge {
+    min-width: 1.65rem;
+    height: 1.65rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: var(--danger-600);
+    color: #fff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    box-shadow: 0 8px 18px rgba(220, 38, 38, 0.24);
 }
 
 /* ============================================================== */

@@ -43,7 +43,7 @@ const createDemoGalleryImage = (title, primary, secondary) => (
     `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${primary}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="900" height="560" fill="url(#g)"/><circle cx="740" cy="120" r="90" fill="rgba(255,255,255,.16)"/><circle cx="130" cy="450" r="130" fill="rgba(255,255,255,.12)"/><rect x="95" y="95" width="710" height="370" rx="34" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.35)" stroke-width="3"/><text x="450" y="265" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800" fill="white">${title}</text><text x="450" y="320" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600" fill="rgba(255,255,255,.82)">Masjid Raudhatul Khoiriyah</text></svg>`)}`
 );
 
-function compressImageFile(file, maxSize = 1280, quality = 0.78) {
+function compressImageFile(file, maxSize = 960, quality = 0.72) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
@@ -299,7 +299,8 @@ async function loadStateFromFirestore(includeFeedbacks) {
 }
 
 // Save state to Firestore, with localStorage fallback for offline preview.
-async function saveState() {
+async function saveState(options = {}) {
+    const { requireRemote = false } = options;
     try {
         if (!firebaseReady || !state.isAdminAuthenticated) throw new Error('Firestore admin write unavailable');
 
@@ -312,9 +313,23 @@ async function saveState() {
         await batch.commit();
         localStorage.setItem('masjid_finance_state_v4', JSON.stringify(getFullStateSnapshot()));
         console.log('State saved to Firestore successfully.');
+        return true;
     } catch (e) {
         console.warn('Firestore unavailable, saving state to localStorage fallback.', e);
         localStorage.setItem('masjid_finance_state_v4', JSON.stringify(getFullStateSnapshot()));
+        if (requireRemote) throw e;
+        return false;
+    }
+}
+
+async function persistAdminState() {
+    try {
+        await saveState({ requireRemote: true });
+        return true;
+    } catch (err) {
+        console.error('Admin save failed', err);
+        showToast('Data belum tersimpan ke database. Cek koneksi/login admin lalu coba lagi.', 'error');
+        return false;
     }
 }
 
@@ -375,7 +390,6 @@ function resetToInitialData() {
     state.tempCommitteePhotoBase64 = null;
     state.tempGalleryImageBase64 = null;
     state.tempQrisImageBase64 = null;
-    saveState();
 }
 
 function addDaysToDateString(dateString, days) {
@@ -1282,8 +1296,32 @@ window.viewReceipt = function(txId) {
     modal.classList.add('active');
 };
 
+async function submitPublicFeedback(newFeedback, formInputs) {
+    state.feedbacks.push(newFeedback);
+
+    try {
+        if (firebaseReady) {
+            const { id, ...payload } = newFeedback;
+            await firestoreDb.collection('feedbacks').doc(id).set(payload);
+        } else {
+            await saveState();
+        }
+    } catch (err) {
+        console.error('Failed to submit feedback', err);
+        state.feedbacks = state.feedbacks.filter(item => item.id !== newFeedback.id);
+        showToast('Aspirasi belum berhasil terkirim. Silakan coba lagi.', 'error');
+        return;
+    }
+
+    formInputs.name.value = '';
+    formInputs.phone.value = '';
+    formInputs.message.value = '';
+
+    showSuccess('Aspirasi Terkirim!', 'Terima kasih, aspirasi atau saran Anda telah berhasil terkirim ke pengurus masjid secara amanah.');
+}
+
 // Handle Public Feedback submission
-async function handlePublicFeedbackSubmit(e) {
+function handlePublicFeedbackSubmit(e) {
     e.preventDefault();
     const nameInput = document.getElementById('feedback-name');
     const phoneInput = document.getElementById('feedback-phone');
@@ -1304,28 +1342,13 @@ async function handlePublicFeedbackSubmit(e) {
         created_at: new Date().toISOString().split('T')[0]
     };
 
-    state.feedbacks.push(newFeedback);
-
-    try {
-        if (firebaseReady) {
-            const { id, ...payload } = newFeedback;
-            await firestoreDb.collection('feedbacks').doc(id).set(payload);
-        } else {
-            await saveState();
-        }
-    } catch (err) {
-        console.error('Failed to submit feedback', err);
-        showToast('Aspirasi belum berhasil terkirim. Silakan coba lagi.', 'error');
-        return;
-    }
-
-    // Clear form
-    nameInput.value = '';
-    phoneInput.value = '';
-    messageInput.value = '';
-
-    // Show Success Modal (which automatically blurs keyboard)
-    showSuccess('Aspirasi Terkirim!', 'Terima kasih, aspirasi atau saran Anda telah berhasil terkirim ke pengurus masjid secara amanah.');
+    showConfirm('Kirim aspirasi ini ke pengurus masjid?', () => {
+        submitPublicFeedback(newFeedback, {
+            name: nameInput,
+            phone: phoneInput,
+            message: messageInput
+        });
+    }, 'Ya, Kirim', false);
 }
 
 // ================= RENDER ADMIN DASHBOARD =================
@@ -1337,14 +1360,19 @@ function renderAdminDashboard() {
 
 function updateUnreadFeedbackBadge() {
     const badge = document.getElementById('feedback-badge');
-    const unreadCount = state.feedbacks.filter(f => f.status === 'unread').length;
+    const optionBadge = document.getElementById('feedback-option-badge');
+    const feedbacks = Array.isArray(state.feedbacks) ? state.feedbacks : [];
+    const unreadCount = feedbacks.filter(f => f.status === 'unread').length;
     
-    if (unreadCount > 0) {
-        badge.textContent = unreadCount;
-        badge.style.display = 'inline-block';
-    } else {
-        badge.style.display = 'none';
-    }
+    [badge, optionBadge].forEach(target => {
+        if (!target) return;
+        if (unreadCount > 0) {
+            target.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            target.style.display = target === optionBadge ? 'inline-flex' : 'inline-block';
+        } else {
+            target.style.display = 'none';
+        }
+    });
 }
 
 function renderAdminActiveTab() {
@@ -1463,7 +1491,7 @@ window.showSuccess = function(title, message) {
 
 // Handle transaction deletion
 window.deleteTransaction = function(txId) {
-    showConfirm('Apakah Anda yakin ingin menghapus data transaksi ini? Tindakan ini akan mengupdate kas.', () => {
+    showConfirm('Apakah Anda yakin ingin menghapus data transaksi ini? Tindakan ini akan mengupdate kas.', async () => {
         // Clear edit mode if deleting the currently-edited tx
         if (state.editingTxId === txId) {
             state.editingTxId = null;
@@ -1471,7 +1499,10 @@ window.deleteTransaction = function(txId) {
         }
         state.transactions = state.transactions.filter(t => t.id !== txId);
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminDashboard();
         renderPublicView();
         showSuccess('Transaksi Dihapus!', 'Alhamdulillah, data transaksi berhasil dihapus dari kas masjid.');
@@ -1566,7 +1597,7 @@ function handleAdminTxSubmit(e) {
 
     const actionText = state.editingTxId ? 'menyimpan perubahan transaksi ini' : 'menyimpan data transaksi baru ini ke kas masjid';
     
-    showConfirm(`Apakah Anda yakin ingin ${actionText}?`, () => {
+    showConfirm(`Apakah Anda yakin ingin ${actionText}?`, async () => {
         if (state.editingTxId) {
             // === UPDATE MODE ===
             const idx = state.transactions.findIndex(t => t.id === state.editingTxId);
@@ -1582,7 +1613,10 @@ function handleAdminTxSubmit(e) {
                 };
             }
             touchAdminUpdate();
-            saveState();
+            if (!(await persistAdminState())) {
+                await loadState();
+                return;
+            }
             resetTxForm();
             renderAdminDashboard();
             renderPublicView();
@@ -1600,7 +1634,10 @@ function handleAdminTxSubmit(e) {
             };
             state.transactions.push(newTx);
             touchAdminUpdate();
-            saveState();
+            if (!(await persistAdminState())) {
+                await loadState();
+                return;
+            }
             resetTxForm();
             renderAdminDashboard();
             renderPublicView();
@@ -1668,11 +1705,14 @@ window.completeProject = function(id) {
     const proj = state.projects.find(p => p.id === id);
     if (!proj) return;
 
-    showConfirm(`Tandai proyek "${proj.title}" sebagai selesai? Nominal terkumpul akan disamakan dengan target anggaran.`, () => {
+    showConfirm(`Tandai proyek "${proj.title}" sebagai selesai? Nominal terkumpul akan disamakan dengan target anggaran.`, async () => {
         proj.status = 'completed';
         proj.collected_amount = proj.target_amount; // Set full collected
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminDashboard();
         renderPublicView();
         showSuccess('Proyek Selesai!', 'Program pembangunan telah ditandai selesai dan progresnya diperbarui menjadi 100%.');
@@ -1680,10 +1720,13 @@ window.completeProject = function(id) {
 };
 
 window.deleteProject = function(id) {
-    showConfirm('Apakah Anda yakin ingin menghapus proyek penggalangan dana ini?', () => {
+    showConfirm('Apakah Anda yakin ingin menghapus proyek penggalangan dana ini?', async () => {
         state.projects = state.projects.filter(p => p.id !== id);
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminDashboard();
         renderPublicView();
         showSuccess('Program Dihapus!', 'Alhamdulillah, program pembangunan berhasil dihapus dari database.');
@@ -1705,7 +1748,7 @@ function handleAdminProjectSubmit(e) {
 
     if (!titleVal || !targetVal) return;
 
-    showConfirm('Apakah Anda yakin ingin mempublikasikan program/proyek pembangunan baru ini?', () => {
+    showConfirm('Apakah Anda yakin ingin mempublikasikan program/proyek pembangunan baru ini?', async () => {
         const newProj = {
             id: 'proj-' + Date.now(),
             title: titleVal,
@@ -1717,7 +1760,10 @@ function handleAdminProjectSubmit(e) {
 
         state.projects.push(newProj);
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
 
         // Reset Form
         titleInput.value = '';
@@ -1798,9 +1844,14 @@ window.markFeedbackRead = function(id) {
     const fb = state.feedbacks.find(f => f.id === id);
     if (fb) {
         fb.status = 'read';
-        saveState();
-        renderAdminDashboard();
-        showToast('Aspirasi ditandai telah dibaca.');
+        persistAdminState().then(async (saved) => {
+            if (!saved) {
+                await loadState();
+                return;
+            }
+            renderAdminDashboard();
+            showToast('Aspirasi ditandai telah dibaca.');
+        });
     }
 };
 
@@ -1809,17 +1860,25 @@ window.deleteFeedback = function(id) {
         const card = document.getElementById(`fb-card-${id}`);
         if (card) {
             card.classList.add('fade-out');
-            setTimeout(() => {
+            setTimeout(async () => {
                 state.feedbacks = state.feedbacks.filter(f => f.id !== id);
-                saveState();
+                if (!(await persistAdminState())) {
+                    await loadState();
+                    return;
+                }
                 renderAdminDashboard();
                 showToast('Aspirasi berhasil dihapus.');
             }, 400); // Wait for CSS scale/fade animation
         } else {
             state.feedbacks = state.feedbacks.filter(f => f.id !== id);
-            saveState();
-            renderAdminDashboard();
-            showToast('Aspirasi berhasil dihapus.');
+            persistAdminState().then(async (saved) => {
+                if (!saved) {
+                    await loadState();
+                    return;
+                }
+                renderAdminDashboard();
+                showToast('Aspirasi berhasil dihapus.');
+            });
         }
     });
 };
@@ -1894,6 +1953,7 @@ async function handleAdminLogin(e) {
         sessionStorage.setItem('current_role', 'admin');
         pwInput.value = '';
         state.currentRole = 'admin';
+        await loadState();
         switchMode('admin');
         showToast('Login berhasil! Selamat datang Pengurus Masjid.');
     } catch (err) {
@@ -1929,7 +1989,7 @@ function handleSaveProfile() {
         return;
     }
 
-    showConfirm('Apakah Anda yakin ingin memperbarui profil bendahara dan informasi bank masjid?', () => {
+    showConfirm('Apakah Anda yakin ingin memperbarui profil bendahara dan informasi bank masjid?', async () => {
         state.treasurerName = nameVal;
         state.treasurerRole = roleVal;
         state.bankName = bankNameVal;
@@ -1942,7 +2002,10 @@ function handleSaveProfile() {
         }
         
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         updateProfileDisplay();
         renderPublicView(); // Re-render public views to update BSI bank card in real-time
         showSuccess('Profil Diperbarui!', 'Alhamdulillah, informasi profil, rekening bank, dan QRIS masjid berhasil diperbarui.');
@@ -2008,9 +2071,14 @@ function exportDataBackup() {
 
 // Reset Database and format state
 function formatDatabase() {
-    showConfirm('Tindakan ini akan menghapus semua data transaksi saat ini dan mengatur ulang ke data contoh pabrik. Apakah Anda yakin?', () => {
+    showConfirm('Tindakan ini akan menghapus semua data transaksi saat ini dan mengatur ulang ke data contoh pabrik. Apakah Anda yakin?', async () => {
         resetToInitialData();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminDashboard();
+        renderPublicView();
         showSuccess('Database Direset!', 'Alhamdulillah, database kas masjid berhasil di-format ulang ke setelan awal pabrik.');
     }, 'Ya, Reset');
 }
@@ -2604,7 +2672,8 @@ function handleAdminCommitteeSubmit(e) {
 
     if (!role || !name) return;
 
-    showConfirm(state.editingCommitteeId ? 'Simpan perubahan data pengurus ini?' : 'Tambah data pengurus baru?', () => {
+    showConfirm(state.editingCommitteeId ? 'Simpan perubahan data pengurus ini?' : 'Tambah data pengurus baru?', async () => {
+        const wasEditing = Boolean(state.editingCommitteeId);
         materializeCommitteeMembers();
         
         const photoUrl = state.tempCommitteePhotoBase64 || (state.editingCommitteeId ? state.committeeMembers.find(m => m.id === state.editingCommitteeId)?.photo_url : null);
@@ -2628,11 +2697,14 @@ function handleAdminCommitteeSubmit(e) {
         }
 
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         resetCommitteeForm();
         renderAdminCommitteeList();
         renderPublicView();
-        showSuccess(state.editingCommitteeId ? 'Data Diperbarui!' : 'Data Ditambahkan!', 'Data pengurus berhasil disimpan.');
+        showSuccess(wasEditing ? 'Data Diperbarui!' : 'Data Ditambahkan!', 'Data pengurus berhasil disimpan.');
     }, 'Ya, Simpan', false);
 }
 
@@ -2695,7 +2767,10 @@ function handleAdminGallerySubmit(e) {
 
         state.activeGalleryIndex = 0;
         touchAdminUpdate();
-        await saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         resetGalleryForm();
         renderAdminGalleryList();
         renderPublicView();
@@ -2741,7 +2816,8 @@ function handleAdminScheduleSubmit(e) {
 
     if (!date || !time || !title || !description) return;
 
-    showConfirm(state.editingScheduleId ? 'Simpan perubahan jadwal kegiatan ini?' : 'Tambah jadwal kegiatan baru?', () => {
+    showConfirm(state.editingScheduleId ? 'Simpan perubahan jadwal kegiatan ini?' : 'Tambah jadwal kegiatan baru?', async () => {
+        const wasEditing = Boolean(state.editingScheduleId);
         materializeSchedules();
 
         if (state.editingScheduleId) {
@@ -2769,11 +2845,14 @@ function handleAdminScheduleSubmit(e) {
             });
         }
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         resetScheduleForm();
         renderAdminScheduleList();
         renderPublicView();
-        showSuccess(state.editingScheduleId ? 'Jadwal Diperbarui!' : 'Jadwal Ditambahkan!', 'Jadwal kegiatan berhasil disimpan.');
+        showSuccess(wasEditing ? 'Jadwal Diperbarui!' : 'Jadwal Ditambahkan!', 'Jadwal kegiatan berhasil disimpan.');
     }, 'Ya, Simpan', false);
 }
 
@@ -2849,12 +2928,15 @@ window.editGalleryItem = function(id) {
 };
 
 window.deleteCommitteeMember = function(id) {
-    showConfirm('Hapus data pengurus ini dari halaman struktur?', () => {
+    showConfirm('Hapus data pengurus ini dari halaman struktur?', async () => {
         materializeCommitteeMembers();
         state.committeeMembers = state.committeeMembers.filter(member => member.id !== id);
         if (state.editingCommitteeId === id) resetCommitteeForm();
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminCommitteeList();
         renderPublicView();
         showToast('Data pengurus berhasil dihapus.');
@@ -2862,13 +2944,16 @@ window.deleteCommitteeMember = function(id) {
 };
 
 window.deleteGalleryItem = function(id) {
-    showConfirm('Hapus dokumentasi kegiatan ini dari galeri?', () => {
+    showConfirm('Hapus dokumentasi kegiatan ini dari galeri?', async () => {
         materializeGalleryItems();
         state.galleryItems = state.galleryItems.filter(item => item.id !== id);
         if (state.editingGalleryId === id) resetGalleryForm();
         state.activeGalleryIndex = 0;
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminGalleryList();
         renderPublicView();
         showToast('Galeri berhasil dihapus.');
@@ -2895,7 +2980,7 @@ window.editSchedule = function(id) {
 };
 
 window.completeSchedule = function(id) {
-    showConfirm('Tandai jadwal ini sebagai selesai? Jadwal selesai akan otomatis dibersihkan setelah 7 hari.', () => {
+    showConfirm('Tandai jadwal ini sebagai selesai? Jadwal selesai akan otomatis dibersihkan setelah 7 hari.', async () => {
         materializeSchedules();
         const schedule = state.schedules.find(item => item.id === id);
         if (!schedule) return;
@@ -2905,7 +2990,10 @@ window.completeSchedule = function(id) {
         schedule.auto_delete_at = addDaysToDateString(today, 7);
         schedule.show_ticker = false;
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminScheduleList();
         renderPublicView();
         showSuccess('Jadwal Selesai!', 'Jadwal tidak lagi tampil di halaman jamaah dan akan dibersihkan otomatis setelah 7 hari.');
@@ -2913,12 +3001,15 @@ window.completeSchedule = function(id) {
 };
 
 window.deleteSchedule = function(id) {
-    showConfirm('Hapus jadwal kegiatan ini?', () => {
+    showConfirm('Hapus jadwal kegiatan ini?', async () => {
         materializeSchedules();
         state.schedules = state.schedules.filter(schedule => schedule.id !== id);
         if (state.editingScheduleId === id) resetScheduleForm();
         touchAdminUpdate();
-        saveState();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
         renderAdminScheduleList();
         renderPublicView();
         showToast('Jadwal berhasil dihapus.');
@@ -3135,17 +3226,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const receiptInput = document.getElementById('tx-receipt');
     const previewArea = document.getElementById('receipt-preview-area');
     
-    receiptInput.addEventListener('change', (e) => {
+    receiptInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                state.tempReceiptBase64 = evt.target.result;
+            try {
+                state.tempReceiptBase64 = await compressImageFile(file, 960, 0.72);
                 previewArea.className = "file-upload-preview has-image";
                 previewArea.innerHTML = `<img src="${state.tempReceiptBase64}" alt="Pratinjau Kuitansi">`;
                 showToast('Gambar kuitansi berhasil diproses.');
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                console.error(err);
+                receiptInput.value = '';
+                showToast('Gambar kuitansi gagal diproses. Coba pilih gambar lain.', 'error');
+            }
         }
     });
 
@@ -3157,9 +3250,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (file) {
                 openCropModal(file, (croppedBase64) => {
                     state.treasurerAvatar = croppedBase64;
-                    saveState();
-                    updateProfileDisplay();
-                    showToast('Foto profil bendahara berhasil diperbarui.');
+                    touchAdminUpdate();
+                    persistAdminState().then(async (saved) => {
+                        if (!saved) {
+                            await loadState();
+                            return;
+                        }
+                        updateProfileDisplay();
+                        showToast('Foto profil bendahara berhasil diperbarui.');
+                    });
                 });
             }
         });
@@ -3194,12 +3293,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             if (!state.qrisImage) return;
-            showConfirm('Hapus QRIS yang sedang digunakan?', () => {
+            showConfirm('Hapus QRIS yang sedang digunakan?', async () => {
                 state.qrisImage = '';
                 state.tempQrisImageBase64 = null;
                 if (qrisInput) qrisInput.value = '';
                 touchAdminUpdate();
-                saveState();
+                if (!(await persistAdminState())) {
+                    await loadState();
+                    return;
+                }
                 updateQrisDisplay();
                 renderPublicView();
                 showToast('QRIS berhasil dihapus.');
