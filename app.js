@@ -65,6 +65,31 @@ function compressImageFile(file, maxSize = 1280, quality = 0.78) {
     });
 }
 
+function prepareQrisImageFile(file, maxSize = 900) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Gagal membaca file QRIS.'));
+        reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('File QRIS tidak bisa diproses.'));
+            img.onload = () => {
+                const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 const INITIAL_COMMITTEE_MEMBERS = [
     { id: 'committee-mosque-chair', group: 'mosque', name: 'Supriyadi', role: 'Ketua', photo_url: null },
     { id: 'committee-mosque-secretary', group: 'mosque', name: 'Dr. Rahmad', role: 'Sekretaris', photo_url: null },
@@ -124,6 +149,7 @@ let state = {
     bankAccountNumber: '71234567890',
     bankAccountHolder: 'Masjid Raudhatul Khoiriyah',
     whatsappNumber: '6285369463373',
+    qrisImage: '',
     isAdminAuthenticated: false,
     currentRole: sessionStorage.getItem('current_role') || 'public', // 'public' | 'admin'
     activeAdminTab: 'adm-screen-tx',
@@ -135,6 +161,7 @@ let state = {
     lastAdminUpdatedAt: null,
     tempCommitteePhotoBase64: null,
     tempGalleryImageBase64: null,
+    tempQrisImageBase64: null,
     editingScheduleId: null
 };
 
@@ -151,6 +178,7 @@ function getSettingsState() {
         bankAccountNumber: state.bankAccountNumber,
         bankAccountHolder: state.bankAccountHolder,
         whatsappNumber: state.whatsappNumber,
+        qrisImage: state.qrisImage,
         committeeMembers: state.committeeMembers,
         schedules: state.schedules,
         lastAdminUpdatedAt: state.lastAdminUpdatedAt
@@ -178,6 +206,7 @@ function applyLoadedState(parsed, includeFeedbacks = true) {
     state.bankAccountNumber = parsed.bankAccountNumber || '71234567890';
     state.bankAccountHolder = parsed.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
     state.whatsappNumber = parsed.whatsappNumber || '6285369463373';
+    state.qrisImage = parsed.qrisImage || '';
     
     const loadedCommitteeMembers = Array.isArray(parsed.committeeMembers) ? parsed.committeeMembers : [...INITIAL_COMMITTEE_MEMBERS];
     state.committeeMembers = loadedCommitteeMembers;
@@ -329,6 +358,7 @@ function resetToInitialData() {
     state.bankAccountNumber = '71234567890';
     state.bankAccountHolder = 'Masjid Raudhatul Khoiriyah';
     state.whatsappNumber = '6285369463373';
+    state.qrisImage = '';
     state.committeeMembers = [...INITIAL_COMMITTEE_MEMBERS];
     state.galleryItems = [...INITIAL_GALLERY_ITEMS];
     state.schedules = [...INITIAL_SCHEDULES];
@@ -338,6 +368,7 @@ function resetToInitialData() {
     state.activeGalleryIndex = 0;
     state.tempCommitteePhotoBase64 = null;
     state.tempGalleryImageBase64 = null;
+    state.tempQrisImageBase64 = null;
     saveState();
 }
 
@@ -466,6 +497,45 @@ function updateProfileDisplay() {
     const miniNameEl = document.getElementById('admin-name-mini');
     if (miniAvatarEl) miniAvatarEl.src = avatarSrc;
     if (miniNameEl) miniNameEl.textContent = state.treasurerName.split(',')[0];
+
+    updateQrisDisplay();
+}
+
+function updateQrisDisplay() {
+    const previewEl = document.getElementById('qris-settings-preview');
+    const removeBtn = document.getElementById('btn-remove-qris');
+    const modalImg = document.getElementById('qris-uploaded-image');
+    const emptyState = document.getElementById('qris-empty-state');
+    const downloadBtn = document.getElementById('btn-download-qris');
+    const qrisSource = state.tempQrisImageBase64 !== null ? state.tempQrisImageBase64 : state.qrisImage;
+
+    if (previewEl) {
+        previewEl.innerHTML = qrisSource
+            ? `<img src="${qrisSource}" alt="Pratinjau QRIS Masjid">`
+            : '<span>QRIS belum diunggah.</span>';
+    }
+
+    if (removeBtn) {
+        removeBtn.style.display = qrisSource ? 'inline-flex' : 'none';
+        removeBtn.textContent = state.tempQrisImageBase64 !== null ? 'Batal Pilihan' : 'Hapus QRIS';
+    }
+
+    if (modalImg && emptyState) {
+        if (state.qrisImage) {
+            modalImg.src = state.qrisImage;
+            modalImg.style.display = 'block';
+            emptyState.style.display = 'none';
+        } else {
+            modalImg.removeAttribute('src');
+            modalImg.style.display = 'none';
+            emptyState.style.display = 'flex';
+        }
+    }
+
+    if (downloadBtn) {
+        downloadBtn.disabled = !state.qrisImage;
+        downloadBtn.textContent = state.qrisImage ? 'Unduh Gambar QRIS (PNG)' : 'QRIS Belum Diunggah';
+    }
 }
 
 function getPublicAccessUrl() {
@@ -738,6 +808,7 @@ window.viewGalleryDetail = function() {
 // ================= RENDER PUBLIC VIEW =================
 function renderPublicView() {
     const balances = calculateBalances();
+    updateQrisDisplay();
     
     // Set KPI Values
     document.getElementById('pub-total-cash').textContent = formatCurrency(balances.total);
@@ -1819,11 +1890,16 @@ function handleSaveProfile() {
         state.bankAccountNumber = bankAccVal;
         state.bankAccountHolder = bankOwnerVal;
         state.whatsappNumber = waNumberVal;
+        if (state.tempQrisImageBase64 !== null) {
+            state.qrisImage = state.tempQrisImageBase64;
+            state.tempQrisImageBase64 = null;
+        }
         
+        touchAdminUpdate();
         saveState();
         updateProfileDisplay();
         renderPublicView(); // Re-render public views to update BSI bank card in real-time
-        showSuccess('Profil Diperbarui!', 'Alhamdulillah, informasi profil bendahara dan rekening bank masjid berhasil diperbarui.');
+        showSuccess('Profil Diperbarui!', 'Alhamdulillah, informasi profil, rekening bank, dan QRIS masjid berhasil diperbarui.');
     }, 'Ya, Perbarui', false);
 }
 
@@ -1895,93 +1971,15 @@ function formatDatabase() {
 
 // Generate and Download official QRIS code sheet as a high-resolution PNG image
 function downloadQRIS() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 600;
-    canvas.height = 820;
-    const ctx = canvas.getContext('2d');
-
-    // 1. Draw Background (White card)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // 2. Draw Top Header Banner (Typical red/rose QRIS merchant color)
-    ctx.fillStyle = '#e11d48';
-    ctx.fillRect(0, 0, canvas.width, 140);
-
-    // 3. Draw QRIS Header Text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 44px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('QRIS', canvas.width / 2, 70);
-
-    // 4. Draw Merchant Info (Mosque Name & NMID)
-    ctx.fillStyle = '#0f172a'; // slate-900
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('Masjid Raudhatul Khoiriyah', canvas.width / 2, 195);
-    
-    ctx.fillStyle = '#64748b'; // slate-500
-    ctx.font = '500 18px sans-serif';
-    ctx.fillText('NMID: ID1020263304523', canvas.width / 2, 235);
-
-    // 5. Draw QR Code Frame box
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(120, 280, 360, 360);
-
-    // 6. Draw QR Code SVG elements
-    const startX = 130;
-    const startY = 290;
-    const qrSize = 340;
-    const scale = qrSize / 100; // 3.4
-
-    // Redraw SVG rectangles onto Canvas
-    const svg = document.querySelector('.qr-svg');
-    if (svg) {
-        const rects = svg.querySelectorAll('rect');
-        rects.forEach(rect => {
-            const x = parseFloat(rect.getAttribute('x') || 0);
-            const y = parseFloat(rect.getAttribute('y') || 0);
-            const w = parseFloat(rect.getAttribute('width') || 0);
-            const h = parseFloat(rect.getAttribute('height') || 0);
-            const fill = rect.getAttribute('fill') || '#000000';
-            
-            ctx.fillStyle = fill;
-            if (x === 42 && y === 42) {
-                ctx.fillStyle = '#064e3b'; // mosque center color
-            }
-            ctx.fillRect(startX + x * scale, startY + y * scale, w * scale, h * scale);
-        });
-
-        // Draw center logo triangle path
-        const paths = svg.querySelectorAll('path');
-        paths.forEach(path => {
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.moveTo(startX + 50 * scale, startY + 45 * scale);
-            ctx.lineTo(startX + 45 * scale, startY + 52 * scale);
-            ctx.lineTo(startX + 55 * scale, startY + 52 * scale);
-            ctx.closePath();
-            ctx.fill();
-        });
+    if (!state.qrisImage) {
+        showToast('QRIS belum diunggah dari halaman pengaturan admin.', 'error');
+        return;
     }
 
-    // 7. Draw Footer (GPN & standard QRIS instruction text)
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText('GPN', canvas.width / 2, 695);
-
-    ctx.fillStyle = '#64748b'; // slate-500
-    ctx.font = 'italic 15px sans-serif';
-    ctx.fillText('Mendukung semua E-Wallet & Mobile Banking', canvas.width / 2, 735);
-    ctx.fillText('Kelurahan Pagar Tengah, Pendopo', canvas.width / 2, 765);
-
-    // 8. Trigger download behavior
     try {
-        const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         link.download = 'QRIS_Masjid_Raudhatul_Khoiriyah.png';
-        link.href = dataUrl;
+        link.href = state.qrisImage;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -3116,6 +3114,48 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Foto profil bendahara berhasil diperbarui.');
                 });
             }
+        });
+    }
+
+    const qrisInput = document.getElementById('change-qris-image');
+    const qrisSelectBtn = document.getElementById('btn-select-qris');
+    const qrisRemoveBtn = document.getElementById('btn-remove-qris');
+    if (qrisSelectBtn && qrisInput) {
+        qrisSelectBtn.addEventListener('click', () => qrisInput.click());
+        qrisInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                state.tempQrisImageBase64 = await prepareQrisImageFile(file);
+                updateQrisDisplay();
+                showToast('QRIS siap disimpan. Klik Simpan Perubahan Profil & Bank.');
+            } catch (err) {
+                console.error(err);
+                showToast('Gambar QRIS gagal diproses. Coba pilih gambar lain.', 'error');
+                qrisInput.value = '';
+            }
+        });
+    }
+    if (qrisRemoveBtn) {
+        qrisRemoveBtn.addEventListener('click', () => {
+            if (state.tempQrisImageBase64 !== null) {
+                state.tempQrisImageBase64 = null;
+                if (qrisInput) qrisInput.value = '';
+                updateQrisDisplay();
+                showToast('Pilihan QRIS dibatalkan.');
+                return;
+            }
+            if (!state.qrisImage) return;
+            showConfirm('Hapus QRIS yang sedang digunakan?', () => {
+                state.qrisImage = '';
+                state.tempQrisImageBase64 = null;
+                if (qrisInput) qrisInput.value = '';
+                touchAdminUpdate();
+                saveState();
+                updateQrisDisplay();
+                renderPublicView();
+                showToast('QRIS berhasil dihapus.');
+            }, 'Ya, Hapus', true);
         });
     }
 

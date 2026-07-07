@@ -742,6 +742,20 @@
                                     <input type="text" id="change-wa-number" placeholder="Contoh: 6281234567890">
                                 </div>
                             </div>
+                            <div class="qris-settings-panel">
+                                <div class="qris-settings-preview" id="qris-settings-preview">
+                                    <span>QRIS belum diunggah.</span>
+                                </div>
+                                <div class="qris-settings-info">
+                                    <label for="change-qris-image">QRIS Masjid</label>
+                                    <input type="file" id="change-qris-image" accept="image/*" style="display:none;">
+                                    <div class="qris-settings-actions">
+                                        <button type="button" class="btn btn-secondary" id="btn-select-qris" style="padding:0.35rem 0.85rem; font-size:0.8rem;">Pilih Gambar QRIS</button>
+                                        <button type="button" class="btn btn-danger" id="btn-remove-qris" style="padding:0.35rem 0.85rem; font-size:0.8rem; display:none;">Hapus QRIS</button>
+                                    </div>
+                                    <p class="text-muted" style="font-size:0.685rem; margin-top:0.25rem; margin-bottom:0;">Gunakan gambar QRIS resmi dari bank/e-wallet. Format JPG/PNG.</p>
+                                </div>
+                            </div>
                             <button class="btn btn-primary" id="btn-save-profile" style="margin-top:1.25rem; width:100%;">Simpan Perubahan Profil &amp; Bank</button>
                         </div>
                     </div>
@@ -990,30 +1004,11 @@
                 <p>NMID: ID1020263304523</p>
             </div>
             <div class="qris-image-wrapper">
-                <div class="qris-frame">
-                    <div class="qris-logo-text">QRIS</div>
-                    <div class="qris-logo-sub">GPN</div>
-                    <div class="qris-qr-code">
-                        <svg viewBox="0 0 100 100" class="qr-svg">
-                            <rect width="100" height="100" fill="white"/>
-                            <rect x="5" y="5" width="25" height="25" fill="#000"/><rect x="9" y="9" width="17" height="17" fill="#fff"/><rect x="13" y="13" width="9" height="9" fill="#000"/>
-                            <rect x="70" y="5" width="25" height="25" fill="#000"/><rect x="74" y="9" width="17" height="17" fill="#fff"/><rect x="78" y="13" width="9" height="9" fill="#000"/>
-                            <rect x="5" y="70" width="25" height="25" fill="#000"/><rect x="9" y="74" width="17" height="17" fill="#fff"/><rect x="13" y="78" width="9" height="9" fill="#000"/>
-                            <rect x="35" y="5" width="5" height="15" fill="#000"/><rect x="45" y="10" width="10" height="5" fill="#000"/>
-                            <rect x="60" y="5" width="5" height="25" fill="#000"/><rect x="35" y="25" width="15" height="5" fill="#000"/>
-                            <rect x="55" y="20" width="5" height="10" fill="#000"/><rect x="5" y="35" width="15" height="5" fill="#000"/>
-                            <rect x="25" y="35" width="10" height="15" fill="#000"/><rect x="40" y="35" width="20" height="5" fill="#000"/>
-                            <rect x="65" y="35" width="5" height="10" fill="#000"/><rect x="75" y="35" width="20" height="5" fill="#000"/>
-                            <rect x="15" y="50" width="5" height="15" fill="#000"/><rect x="25" y="55" width="25" height="5" fill="#000"/>
-                            <rect x="55" y="45" width="10" height="20" fill="#000"/><rect x="70" y="45" width="15" height="5" fill="#000"/>
-                            <rect x="90" y="50" width="5" height="15" fill="#000"/><rect x="35" y="65" width="5" height="20" fill="#000"/>
-                            <rect x="45" y="70" width="15" height="5" fill="#000"/><rect x="65" y="65" width="5" height="10" fill="#000"/>
-                            <rect x="75" y="70" width="20" height="5" fill="#000"/><rect x="35" y="80" width="20" height="5" fill="#000"/>
-                            <rect x="60" y="75" width="5" height="20" fill="#000"/><rect x="70" y="80" width="10" height="15" fill="#000"/>
-                            <rect x="85" y="85" width="10" height="5" fill="#000"/>
-                            <rect x="42" y="42" width="16" height="16" fill="#064e3b" rx="2"/>
-                            <path d="M50 45L45 52H55L50 45Z" fill="#fff"/>
-                        </svg>
+                <div class="qris-frame" id="qris-display-frame">
+                    <img id="qris-uploaded-image" class="qris-uploaded-image" src="" alt="QRIS Masjid" style="display:none;">
+                    <div class="qris-empty-state" id="qris-empty-state">
+                        <strong>QRIS belum tersedia</strong>
+                        <span>Pengurus dapat mengunggah QRIS dari menu pengaturan admin.</span>
                     </div>
                 </div>
             </div>
