@@ -276,6 +276,10 @@ async function loadStateFromFirestore(includeFeedbacks) {
         getCollectionData('galleryItems'),
         firestoreDb.collection('settings').doc(APP_SETTINGS_DOC).get()
     ]);
+    const settingsData = settingsDoc.exists ? settingsDoc.data() : {};
+    const loadedGalleryItems = galleryItems.length
+        ? galleryItems
+        : (Array.isArray(settingsData.galleryItems) ? settingsData.galleryItems : (settingsDoc.exists ? [] : undefined));
 
     let feedbacks = [];
     if (includeFeedbacks) {
@@ -286,8 +290,8 @@ async function loadStateFromFirestore(includeFeedbacks) {
         transactions: transactions.length ? transactions : INITIAL_TRANSACTIONS,
         projects: projects.length ? projects : INITIAL_PROJECTS,
         feedbacks,
-        ...(settingsDoc.exists ? settingsDoc.data() : {}),
-        galleryItems: galleryItems.length ? galleryItems : (settingsDoc.exists ? settingsDoc.data().galleryItems : undefined)
+        ...settingsData,
+        galleryItems: loadedGalleryItems
     }, includeFeedbacks);
     mergeLocalGalleryFallback();
 }
@@ -396,26 +400,26 @@ function formatAdminUpdatedAt() {
 }
 
 function materializeCommitteeMembers() {
-    if (!Array.isArray(state.committeeMembers) || state.committeeMembers.length === 0) {
+    if (!Array.isArray(state.committeeMembers)) {
         state.committeeMembers = INITIAL_COMMITTEE_MEMBERS.map(item => ({ ...item }));
     }
 }
 
 function materializeGalleryItems() {
-    if (!Array.isArray(state.galleryItems) || state.galleryItems.length === 0) {
+    if (!Array.isArray(state.galleryItems)) {
         state.galleryItems = INITIAL_GALLERY_ITEMS.map(item => ({ ...item }));
     }
 }
 
 function materializeSchedules() {
-    if (!Array.isArray(state.schedules) || state.schedules.length === 0) {
+    if (!Array.isArray(state.schedules)) {
         state.schedules = INITIAL_SCHEDULES.map(item => ({ ...item }));
     }
     state.schedules = cleanupExpiredSchedules(state.schedules);
 }
 
 function getSchedulesForDisplay() {
-    return cleanupExpiredSchedules(Array.isArray(state.schedules) && state.schedules.length ? state.schedules : INITIAL_SCHEDULES);
+    return cleanupExpiredSchedules(Array.isArray(state.schedules) ? state.schedules : INITIAL_SCHEDULES);
 }
 
 function getActiveSchedules() {
@@ -444,7 +448,7 @@ function getFilteredGalleryItems() {
 }
 
 function getGalleryItemsForDisplay() {
-    return Array.isArray(state.galleryItems) && state.galleryItems.length ? state.galleryItems : INITIAL_GALLERY_ITEMS;
+    return Array.isArray(state.galleryItems) ? state.galleryItems : INITIAL_GALLERY_ITEMS;
 }
 
 
