@@ -196,8 +196,8 @@ function getFullStateSnapshot() {
 }
 
 function applyLoadedState(parsed, includeFeedbacks = true) {
-    state.transactions = parsed.transactions || INITIAL_TRANSACTIONS;
-    state.projects = parsed.projects || INITIAL_PROJECTS;
+    state.transactions = Array.isArray(parsed.transactions) ? parsed.transactions : [...INITIAL_TRANSACTIONS];
+    state.projects = Array.isArray(parsed.projects) ? parsed.projects : [...INITIAL_PROJECTS];
     if (includeFeedbacks) state.feedbacks = parsed.feedbacks || [];
     state.treasurerName = parsed.treasurerName || 'Ardi Toher';
     state.treasurerRole = parsed.treasurerRole || 'Bendahara';
@@ -277,6 +277,8 @@ async function loadStateFromFirestore(includeFeedbacks) {
         firestoreDb.collection('settings').doc(APP_SETTINGS_DOC).get()
     ]);
     const settingsData = settingsDoc.exists ? settingsDoc.data() : {};
+    const loadedTransactions = transactions.length ? transactions : (settingsDoc.exists ? [] : [...INITIAL_TRANSACTIONS]);
+    const loadedProjects = projects.length ? projects : (settingsDoc.exists ? [] : [...INITIAL_PROJECTS]);
     const loadedGalleryItems = galleryItems.length
         ? galleryItems
         : (Array.isArray(settingsData.galleryItems) ? settingsData.galleryItems : (settingsDoc.exists ? [] : undefined));
@@ -287,8 +289,8 @@ async function loadStateFromFirestore(includeFeedbacks) {
     }
 
     applyLoadedState({
-        transactions: transactions.length ? transactions : INITIAL_TRANSACTIONS,
-        projects: projects.length ? projects : INITIAL_PROJECTS,
+        transactions: loadedTransactions,
+        projects: loadedProjects,
         feedbacks,
         ...settingsData,
         galleryItems: loadedGalleryItems
@@ -611,13 +613,22 @@ function formatCurrency(value) {
     }).format(value);
 }
 
+function getTransactions() {
+    return Array.isArray(state.transactions) ? state.transactions : [];
+}
+
+function getProjects() {
+    return Array.isArray(state.projects) ? state.projects : [];
+}
+
 // Calculate Balances
 function calculateBalances() {
     let totalCash = 0;
     let totalBank = 0;
     
-    state.transactions.forEach(tx => {
+    getTransactions().forEach(tx => {
         const amt = parseFloat(tx.amount);
+        if (!Number.isFinite(amt)) return;
         if (tx.type === 'income') {
             if (tx.storage === 'cash') totalCash += amt;
             else totalBank += amt;
@@ -640,9 +651,10 @@ function calculateMonthlyIncome() {
     const today = new Date();
     const currentYM = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
     
-    state.transactions.forEach(tx => {
-        if (tx.type === 'income' && tx.date.substr(0, 7) === currentYM) {
-            income += parseFloat(tx.amount);
+    getTransactions().forEach(tx => {
+        const amt = parseFloat(tx.amount);
+        if (tx.type === 'income' && tx.date?.substr(0, 7) === currentYM && Number.isFinite(amt)) {
+            income += amt;
         }
     });
     return income;
@@ -654,9 +666,10 @@ function calculateMonthlyExpense() {
     const today = new Date();
     const currentYM = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
     
-    state.transactions.forEach(tx => {
-        if (tx.type === 'expense' && tx.date.substr(0, 7) === currentYM) {
-            expense += parseFloat(tx.amount);
+    getTransactions().forEach(tx => {
+        const amt = parseFloat(tx.amount);
+        if (tx.type === 'expense' && tx.date?.substr(0, 7) === currentYM && Number.isFinite(amt)) {
+            expense += amt;
         }
     });
     return expense;
@@ -831,7 +844,8 @@ function renderPublicView() {
     }
 
     // Populate year filter dropdowns dynamically from actual transaction data
-    const yearsInData = [...new Set(state.transactions.map(tx => tx.date.substr(0, 4)))].sort((a, b) => b - a);
+    const transactions = getTransactions();
+    const yearsInData = [...new Set(transactions.map(tx => tx.date?.substr(0, 4)).filter(Boolean))].sort((a, b) => b - a);
     const currentYear = new Date().getFullYear().toString();
     if (!yearsInData.includes(currentYear)) yearsInData.unshift(currentYear);
     
@@ -876,6 +890,7 @@ function renderSVGChart() {
     const monthFilter = monthFilterEl ? monthFilterEl.value : 'all';
     
     const chartData = [];
+    const transactions = getTransactions();
     const today = new Date();
     let isRolling6Months = false;
 
@@ -894,12 +909,14 @@ function renderSVGChart() {
         }
 
         // Aggregate transactions into monthly slots
-        state.transactions.forEach(tx => {
-            const txYM = tx.date.substr(0, 7); // 'YYYY-MM'
+        transactions.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (!Number.isFinite(amount)) return;
+            const txYM = tx.date?.substr(0, 7); // 'YYYY-MM'
             const slot = chartData.find(s => s.key === txYM);
             if (slot) {
-                if (tx.type === 'income') slot.income += parseFloat(tx.amount);
-                else slot.expense += parseFloat(tx.amount);
+                if (tx.type === 'income') slot.income += amount;
+                else slot.expense += amount;
             }
         });
     } else if (yearFilter !== 'all' && monthFilter === 'all') {
@@ -915,12 +932,14 @@ function renderSVGChart() {
             });
         }
 
-        state.transactions.forEach(tx => {
-            const txYM = tx.date.substr(0, 7);
+        transactions.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (!Number.isFinite(amount)) return;
+            const txYM = tx.date?.substr(0, 7);
             const slot = chartData.find(s => s.key === txYM);
             if (slot) {
-                if (tx.type === 'income') slot.income += parseFloat(tx.amount);
-                else slot.expense += parseFloat(tx.amount);
+                if (tx.type === 'income') slot.income += amount;
+                else slot.expense += amount;
             }
         });
     } else if (yearFilter !== 'all' && monthFilter !== 'all') {
@@ -932,9 +951,11 @@ function renderSVGChart() {
             { label: 'Mgg 4 (22+)', key: 'w4', income: 0, expense: 0 }
         );
 
-        state.transactions.forEach(tx => {
-            const txY = tx.date.substr(0, 4);
-            const txM = tx.date.substr(5, 2);
+        transactions.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (!Number.isFinite(amount)) return;
+            const txY = tx.date?.substr(0, 4);
+            const txM = tx.date?.substr(5, 2);
             if (txY === yearFilter && txM === monthFilter) {
                 const day = parseInt(tx.date.substr(8, 2));
                 let slotKey = 'w4';
@@ -944,8 +965,8 @@ function renderSVGChart() {
 
                 const slot = chartData.find(s => s.key === slotKey);
                 if (slot) {
-                    if (tx.type === 'income') slot.income += parseFloat(tx.amount);
-                    else slot.expense += parseFloat(tx.amount);
+                    if (tx.type === 'income') slot.income += amount;
+                    else slot.expense += amount;
                 }
             }
         });
@@ -967,12 +988,14 @@ function renderSVGChart() {
             });
         });
 
-        state.transactions.forEach(tx => {
-            const txYM = tx.date.substr(0, 7);
+        transactions.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (!Number.isFinite(amount)) return;
+            const txYM = tx.date?.substr(0, 7);
             const slot = chartData.find(s => s.key === txYM);
             if (slot) {
-                if (tx.type === 'income') slot.income += parseFloat(tx.amount);
-                else slot.expense += parseFloat(tx.amount);
+                if (tx.type === 'income') slot.income += amount;
+                else slot.expense += amount;
             }
         });
     }
@@ -1070,8 +1093,16 @@ function renderPublicProjects() {
     if (!container) return;
 
     container.innerHTML = '';
-    state.projects.forEach(p => {
-        const pct = Math.min(100, Math.round((p.collected_amount / p.target_amount) * 100));
+    const projects = getProjects();
+    if (projects.length === 0) {
+        container.innerHTML = `<div class="empty-state"><p>Belum ada program atau proyek aktif.</p></div>`;
+        return;
+    }
+
+    projects.forEach(p => {
+        const targetAmount = parseFloat(p.target_amount) || 0;
+        const collectedAmount = parseFloat(p.collected_amount) || 0;
+        const pct = targetAmount > 0 ? Math.min(100, Math.round((collectedAmount / targetAmount) * 100)) : 0;
         const isCompleted = p.status === 'completed' || pct >= 100;
         
         // Helper template for active donations
@@ -1112,11 +1143,11 @@ function renderPublicProjects() {
                 <div class="project-stats-grid">
                     <div class="p-stat">
                         <span>Target Pendanaan</span>
-                        <span>${formatCurrency(p.target_amount)}</span>
+                        <span>${formatCurrency(targetAmount)}</span>
                     </div>
                     <div class="p-stat">
                         <span>Terkumpul</span>
-                        <span>${formatCurrency(p.collected_amount)}</span>
+                        <span>${formatCurrency(collectedAmount)}</span>
                     </div>
                 </div>
                 ${donationGuideHTML}
@@ -1137,13 +1168,13 @@ function renderPublicTransactions() {
     const typeFilter = document.getElementById('filter-type').value;
 
     // Filter transaction list
-    const filteredTx = state.transactions.filter(tx => {
-        const matchesSearch = tx.description.toLowerCase().includes(query);
+    const filteredTx = getTransactions().filter(tx => {
+        const matchesSearch = String(tx.description || '').toLowerCase().includes(query);
         const matchesType = typeFilter === 'all' || tx.type === typeFilter;
         
         // Date format: YYYY-MM-DD
-        const txYear = tx.date.substr(0, 4);
-        const txMonth = tx.date.substr(5, 2);
+        const txYear = tx.date?.substr(0, 4);
+        const txMonth = tx.date?.substr(5, 2);
         
         const matchesMonth = monthFilter === 'all' || txMonth === monthFilter;
         const matchesYear = yearFilter === 'all' || txYear === yearFilter;
@@ -1235,7 +1266,7 @@ function formatDateString(str) {
 
 // View Receipt in Modal (Triggered by button click in tables)
 window.viewReceipt = function(txId) {
-    const tx = state.transactions.find(t => t.id === txId);
+    const tx = getTransactions().find(t => t.id === txId);
     if (!tx || !tx.receipt_url) return;
 
     const modal = document.getElementById('modal-receipt');
@@ -1345,7 +1376,7 @@ function renderAdminTxTab() {
     if (!tbody) return;
 
     // Sort all transactions newest-first
-    const sortedTx = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedTx = [...getTransactions()].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     tbody.innerHTML = '';
     
@@ -1439,6 +1470,7 @@ window.deleteTransaction = function(txId) {
             resetTxForm();
         }
         state.transactions = state.transactions.filter(t => t.id !== txId);
+        touchAdminUpdate();
         saveState();
         renderAdminDashboard();
         renderPublicView();
@@ -1448,7 +1480,7 @@ window.deleteTransaction = function(txId) {
 
 // Load transaction into form for editing
 window.editTransaction = function(txId) {
-    const tx = state.transactions.find(t => t.id === txId);
+    const tx = getTransactions().find(t => t.id === txId);
     if (!tx) return;
     
     // Mark edit mode
@@ -1549,6 +1581,7 @@ function handleAdminTxSubmit(e) {
                     receipt_url: state.tempReceiptBase64 !== null ? state.tempReceiptBase64 : state.transactions[idx].receipt_url
                 };
             }
+            touchAdminUpdate();
             saveState();
             resetTxForm();
             renderAdminDashboard();
@@ -1566,6 +1599,7 @@ function handleAdminTxSubmit(e) {
                 receipt_url: state.tempReceiptBase64
             };
             state.transactions.push(newTx);
+            touchAdminUpdate();
             saveState();
             resetTxForm();
             renderAdminDashboard();
@@ -1581,20 +1615,23 @@ function renderAdminProjectsTab() {
     if (!tbody) return;
 
     tbody.innerHTML = '';
+    const projects = getProjects();
     
-    if (state.projects.length === 0) {
+    if (projects.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Belum ada program/proyek terdaftar.</td></tr>`;
         return;
     }
 
-    state.projects.forEach(p => {
-        const pct = Math.min(100, Math.round((p.collected_amount / p.target_amount) * 100));
+    projects.forEach(p => {
+        const targetAmount = parseFloat(p.target_amount) || 0;
+        const collectedAmount = parseFloat(p.collected_amount) || 0;
+        const pct = targetAmount > 0 ? Math.min(100, Math.round((collectedAmount / targetAmount) * 100)) : 0;
         
         tbody.innerHTML += `
             <tr>
                 <td style="font-weight: 600;">${p.title}</td>
-                <td class="number-font">${formatCurrency(p.target_amount)}</td>
-                <td class="number-font">${formatCurrency(p.collected_amount)}</td>
+                <td class="number-font">${formatCurrency(targetAmount)}</td>
+                <td class="number-font">${formatCurrency(collectedAmount)}</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span class="number-font" style="font-size: 0.8rem; font-weight: 700;">${pct}%</span>
@@ -1634,6 +1671,7 @@ window.completeProject = function(id) {
     showConfirm(`Tandai proyek "${proj.title}" sebagai selesai? Nominal terkumpul akan disamakan dengan target anggaran.`, () => {
         proj.status = 'completed';
         proj.collected_amount = proj.target_amount; // Set full collected
+        touchAdminUpdate();
         saveState();
         renderAdminDashboard();
         renderPublicView();
@@ -1644,8 +1682,10 @@ window.completeProject = function(id) {
 window.deleteProject = function(id) {
     showConfirm('Apakah Anda yakin ingin menghapus proyek penggalangan dana ini?', () => {
         state.projects = state.projects.filter(p => p.id !== id);
+        touchAdminUpdate();
         saveState();
         renderAdminDashboard();
+        renderPublicView();
         showSuccess('Program Dihapus!', 'Alhamdulillah, program pembangunan berhasil dihapus dari database.');
     });
 };
@@ -1676,6 +1716,7 @@ function handleAdminProjectSubmit(e) {
         };
 
         state.projects.push(newProj);
+        touchAdminUpdate();
         saveState();
 
         // Reset Form
@@ -1685,6 +1726,7 @@ function handleAdminProjectSubmit(e) {
         descInput.value = '';
 
         renderAdminDashboard();
+        renderPublicView();
         showSuccess('Program Dipublikasikan!', 'Alhamdulillah, program penggalangan dana baru berhasil dipublikasikan ke jamaah.');
     }, 'Ya, Publikasikan', false);
 }
@@ -2146,12 +2188,12 @@ function printFilteredReport() {
     const typeFilter = typeSelect.value;
 
     // Filter transaction list (identical to public rendering filters)
-    const filteredTx = state.transactions.filter(tx => {
-        const matchesSearch = tx.description.toLowerCase().includes(query.toLowerCase());
+    const filteredTx = getTransactions().filter(tx => {
+        const matchesSearch = String(tx.description || '').toLowerCase().includes(query.toLowerCase());
         const matchesType = typeFilter === 'all' || tx.type === typeFilter;
         
-        const txYear = tx.date.substr(0, 4);
-        const txMonth = tx.date.substr(5, 2);
+        const txYear = tx.date?.substr(0, 4);
+        const txMonth = tx.date?.substr(5, 2);
         
         const matchesMonth = monthFilter === 'all' || txMonth === monthFilter;
         const matchesYear = yearFilter === 'all' || txYear === yearFilter;
@@ -2201,10 +2243,12 @@ function printFilteredReport() {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Tidak ada transaksi yang cocok untuk dicetak.</td></tr>`;
     } else {
         filteredTx.forEach(tx => {
+            const amount = parseFloat(tx.amount);
+            if (!Number.isFinite(amount)) return;
             if (tx.type === 'income') {
-                totalIncome += tx.amount;
+                totalIncome += amount;
             } else {
-                totalExpense += tx.amount;
+                totalExpense += amount;
             }
 
             tbody.innerHTML += `
@@ -2213,7 +2257,7 @@ function printFilteredReport() {
                     <td style="font-weight: 500;">${tx.description}</td>
                     <td>${tx.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}</td>
                     <td class="text-right number-font" style="font-weight: 600;">
-                        ${tx.type === 'income' ? '+' : '-'} ${formatCurrency(tx.amount)}
+                        ${tx.type === 'income' ? '+' : '-'} ${formatCurrency(amount)}
                     </td>
                 </tr>
             `;
