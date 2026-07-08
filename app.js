@@ -631,6 +631,12 @@ function parseNominalInput(value) {
     return digits ? Number(digits) : 0;
 }
 
+function formatBankAccountDisplay(value) {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return '-';
+    return digits.replace(/(.{4})/g, '$1 ').trim();
+}
+
 function getTransactions() {
     return Array.isArray(state.transactions) ? state.transactions : [];
 }
@@ -869,11 +875,9 @@ function renderPublicView() {
     
     // Set KPI Values
     document.getElementById('pub-total-cash').textContent = formatCurrency(balances.total);
-    const bankLogoEl = document.getElementById('pub-bank-logo');
     const bankAccountEl = document.getElementById('pub-bank-account');
     const bankHolderEl = document.getElementById('pub-bank-holder');
-    if (bankLogoEl) bankLogoEl.textContent = state.bankName || 'BANK';
-    if (bankAccountEl) bankAccountEl.textContent = state.bankAccountNumber || '-';
+    if (bankAccountEl) bankAccountEl.textContent = formatBankAccountDisplay(state.bankAccountNumber);
     if (bankHolderEl) bankHolderEl.textContent = state.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
 
     const bankDetailsEl = document.getElementById('pub-bank-details');
@@ -2035,7 +2039,7 @@ function handleSaveProfile() {
             return;
         }
         updateProfileDisplay();
-        renderPublicView(); // Re-render public views to update BSI bank card in real-time
+        renderPublicView();
         showSuccess('Profil Diperbarui!', 'Alhamdulillah, informasi profil, rekening bank, dan QRIS masjid berhasil diperbarui.');
     }, 'Ya, Perbarui', false);
 }
@@ -2099,7 +2103,7 @@ function exportDataBackup() {
 
 // Reset Database and format state
 function formatDatabase() {
-    showConfirm('Tindakan ini akan menghapus semua data transaksi saat ini dan mengatur ulang ke data contoh pabrik. Apakah Anda yakin?', async () => {
+    showConfirm('Tindakan ini akan menghapus semua data transaksi, program, galeri, jadwal, dan aspirasi saat ini lalu mengatur ulang ke data awal kosong. Apakah Anda yakin?', async () => {
         resetToInitialData();
         if (!(await persistAdminState())) {
             await loadState();
@@ -2107,7 +2111,7 @@ function formatDatabase() {
         }
         renderAdminDashboard();
         renderPublicView();
-        showSuccess('Database Direset!', 'Alhamdulillah, database kas masjid berhasil di-format ulang ke setelan awal pabrik.');
+        showSuccess('Database Direset!', 'Alhamdulillah, database masjid berhasil di-format ulang ke data awal kosong.');
     }, 'Ya, Reset');
 }
 

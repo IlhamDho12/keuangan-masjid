@@ -940,92 +940,122 @@ input:focus, select:focus, textarea:focus {
 .kpi-card.total-balance .kpi-icon { color: rgba(255,255,255,0.1); }
 .kpi-card.bank-balance { display: none; }
 .donation-bank-card {
-    display: grid;
-    grid-template-columns: 1fr 5.65rem;
-    gap: 0.7rem;
-    align-items: stretch;
     position: relative;
     overflow: hidden;
-    min-height: 9rem;
+    min-height: 13.25rem;
     border-radius: var(--radius-lg);
     padding: 1rem;
     color: #fff;
     background:
-        radial-gradient(circle at 78% 22%, rgba(255,255,255,0.18) 0 0.22rem, transparent 0.24rem),
-        radial-gradient(circle at 16% 48%, rgba(255,255,255,0.16) 0 0.32rem, transparent 0.34rem),
-        linear-gradient(135deg, #0b4f9f 0%, #1264b0 58%, #0a3f88 100%);
-    box-shadow: 0 18px 34px rgba(11, 79, 159, 0.22);
+        radial-gradient(ellipse at 76% 40%, rgba(56,189,248,0.62) 0 8%, rgba(14,116,144,0.24) 18%, transparent 44%),
+        repeating-radial-gradient(ellipse at 77% 38%, rgba(125,211,252,0.24) 0 0.16rem, transparent 0.18rem 0.55rem),
+        linear-gradient(145deg, #111d52 0%, #1b2d73 44%, #162a68 100%);
+    box-shadow: 0 18px 34px rgba(30, 58, 138, 0.28);
 }
 .donation-bank-card::after {
     content: "";
     position: absolute;
-    inset: auto -2rem -4rem -2rem;
+    inset: auto -3rem -4.3rem -2rem;
+    height: 7.5rem;
+    background: linear-gradient(160deg, rgba(14,165,233,0.42), rgba(20,184,166,0.16));
+    transform: rotate(-6deg);
+}
+.donation-bank-card::before {
+    content: "";
+    position: absolute;
+    inset: 1rem auto auto 0.9rem;
+    width: 9rem;
     height: 7rem;
-    background: rgba(255,255,255,0.08);
-    transform: rotate(-8deg);
-}
-.bank-card-main {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-}
-.bank-card-top {
-    position: static;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 1rem;
+    background:
+        linear-gradient(180deg, transparent 0 18%, rgba(255,255,255,0.08) 18% 22%, transparent 22% 34%, rgba(255,255,255,0.06) 34% 38%, transparent 38%),
+        radial-gradient(ellipse at 30% 80%, rgba(255,255,255,0.08), transparent 60%);
+    opacity: 0.48;
 }
 .bank-brand-mark {
-    font-size: 1.25rem;
+    position: absolute;
+    z-index: 2;
+    left: 1rem;
+    top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    font-size: 1rem;
     font-weight: 900;
     letter-spacing: 0;
     text-transform: uppercase;
+    line-height: 0.95;
+}
+.bank-brand-mark small {
+    display: block;
+    font-size: 0.66rem;
+    line-height: 1;
+    font-weight: 800;
+}
+.bsb-logo-mark {
+    width: 1.35rem;
+    height: 1.7rem;
+    background:
+        radial-gradient(ellipse at 45% 16%, transparent 0 0.22rem, #fff 0.24rem 0.3rem, transparent 0.32rem),
+        radial-gradient(ellipse at 56% 43%, transparent 0 0.22rem, #fff 0.24rem 0.3rem, transparent 0.32rem),
+        radial-gradient(ellipse at 45% 70%, transparent 0 0.22rem, #fff 0.24rem 0.3rem, transparent 0.32rem);
+    border-left: 0.18rem solid rgba(255,255,255,0.95);
+    border-radius: 0.4rem 0 0 0.4rem;
 }
 .bank-card-chip {
-    width: 2rem;
-    height: 1.45rem;
-    border-radius: 0.35rem;
-    background: linear-gradient(135deg, #facc15, #ca8a04);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
-}
-.bank-card-side {
-    position: relative;
+    position: absolute;
     z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1.15rem;
-    padding-top: 0.1rem;
+    right: 5.45rem;
+    top: 3.15rem;
+    width: 2.05rem;
+    height: 1.45rem;
+    border-radius: 0.24rem;
+    background:
+        linear-gradient(90deg, rgba(120,53,15,0.26) 0 1px, transparent 1px 0.62rem),
+        linear-gradient(0deg, rgba(120,53,15,0.22) 0 1px, transparent 1px 0.5rem),
+        linear-gradient(135deg, #f6d36a, #b88a28);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.42), 0 6px 12px rgba(0,0,0,0.16);
 }
-.bank-card-copy {
-    position: relative;
-    z-index: 1;
-    margin-top: 0.65rem;
-}
-.bank-card-copy span {
-    display: block;
-    color: rgba(255,255,255,0.68);
-    font-size: 0.62rem;
+.bank-card-number {
+    position: absolute;
+    z-index: 2;
+    left: 1.05rem;
+    right: 6.55rem;
+    top: 6.55rem;
+    color: rgba(255,255,255,0.92);
+    font-size: 1.34rem;
+    letter-spacing: 0.13em;
+    word-spacing: 0.25rem;
     font-weight: 800;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.45), 0 -1px 0 rgba(255,255,255,0.35);
+}
+.bank-card-holder {
+    position: absolute;
+    z-index: 2;
+    left: 1.05rem;
+    right: 5.7rem;
+    bottom: 1.25rem;
+    color: rgba(255,255,255,0.96);
+    font-size: 0.86rem;
+    line-height: 1.15;
+    font-weight: 900;
     text-transform: uppercase;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.32);
 }
-.bank-card-copy strong {
-    display: block;
-    margin-top: 0.2rem;
-    color: #fff;
-    font-size: 1rem;
-    line-height: 1.25;
-    word-break: break-word;
-}
-.bank-card-copy .number-font {
-    font-size: 1.2rem;
+.bank-card-gpn {
+    position: absolute;
+    z-index: 2;
+    right: 0.95rem;
+    bottom: 0.95rem;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.95rem;
+    font-weight: 900;
     letter-spacing: 0;
 }
 .qris-mini-card {
-    position: relative;
+    position: absolute;
+    z-index: 3;
+    top: 5.2rem;
+    right: 1.2rem;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -1044,8 +1074,8 @@ input:focus, select:focus, textarea:focus {
     display: none;
 }
 .qris-mini-card img {
-    width: 4.65rem;
-    height: 6.1rem;
+    width: 4.35rem;
+    height: 4.35rem;
     object-fit: cover;
     border-radius: 0.42rem;
     border: 2px solid rgba(147, 197, 253, 0.95);
@@ -1071,22 +1101,80 @@ input:focus, select:focus, textarea:focus {
     transform: translateY(-1px) scale(1.02);
     box-shadow: 0 14px 24px rgba(15,23,42,0.22);
 }
+.donation-bank-card.image-card {
+    min-height: 0;
+    aspect-ratio: 1164 / 778;
+    padding: 0;
+    background: transparent;
+    border-radius: 1.25rem;
+    box-shadow: none;
+    overflow: visible;
+}
+.donation-bank-card.image-card::before,
+.donation-bank-card.image-card::after {
+    display: none;
+}
+.donation-bank-card.image-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter:
+        saturate(1.12)
+        contrast(1.08)
+        brightness(1.04)
+        drop-shadow(0 18px 28px rgba(15, 23, 42, 0.18))
+        drop-shadow(0 5px 12px rgba(30, 64, 175, 0.14));
+}
+.qris-hotspot {
+    position: absolute;
+    z-index: 3;
+    top: 34%;
+    right: 10.2%;
+    width: 18.5%;
+    height: 24%;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    cursor: pointer;
+}
+.qris-hotspot:focus-visible {
+    outline: 2px solid rgba(147,197,253,0.95);
+    outline-offset: 2px;
+}
 
 @media (max-width: 380px) {
     .donation-bank-card {
-        grid-template-columns: 1fr 5rem;
+        min-height: 12.2rem;
         padding: 0.85rem;
     }
-    .bank-card-copy .number-font { font-size: 1.05rem; }
+    .bank-brand-mark { font-size: 0.86rem; }
+    .bank-card-number {
+        top: 6.2rem;
+        right: 5.9rem;
+        font-size: 1.05rem;
+        letter-spacing: 0.1em;
+    }
+    .bank-card-holder {
+        right: 5.2rem;
+        font-size: 0.72rem;
+    }
+    .bank-card-chip {
+        right: 4.9rem;
+        top: 3.05rem;
+    }
+    .qris-mini-card {
+        top: 5rem;
+        right: 1rem;
+    }
     .qris-mini-card img {
-        width: 4rem;
-        height: 5.3rem;
+        width: 3.8rem;
+        height: 3.8rem;
     }
     .qris-mini-card.is-empty::before {
-        width: 4rem;
-        height: 5.3rem;
+        width: 3.8rem;
+        height: 3.8rem;
     }
-    .bank-card-side { gap: 0.9rem; }
 }
 
 /* Update Info Bar */
