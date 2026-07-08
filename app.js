@@ -1043,13 +1043,13 @@ function renderSVGChart() {
         });
     }
 
-    // Determine max value for chart scaling
-    let maxVal = 2000000; // minimum scale threshold
+    // Determine max value from actual data so small nominal entries remain visible.
+    let maxVal = 0;
     chartData.forEach(s => {
         if (s.income > maxVal) maxVal = s.income;
         if (s.expense > maxVal) maxVal = s.expense;
     });
-    maxVal = maxVal * 1.15; // add 15% breathing room at top
+    maxVal = maxVal > 0 ? maxVal * 1.15 : 1; // add breathing room at top
 
     // SVG Drawing Parameters
     const svgWidth = 800;
@@ -1086,8 +1086,10 @@ function renderSVGChart() {
         const xIn = xCenter - barWidth - 3;
         const xOut = xCenter + 3;
 
-        const hIn = (s.income / maxVal) * chartHeight;
-        const hOut = (s.expense / maxVal) * chartHeight;
+        const rawHIn = (s.income / maxVal) * chartHeight;
+        const rawHOut = (s.expense / maxVal) * chartHeight;
+        const hIn = s.income > 0 ? Math.max(3, rawHIn) : 0;
+        const hOut = s.expense > 0 ? Math.max(3, rawHOut) : 0;
 
         const yIn = svgHeight - paddingBottom - hIn;
         const yOut = svgHeight - paddingBottom - hOut;
@@ -1125,9 +1127,9 @@ function formatChartYLabel(val) {
     if (val >= 1000000) {
         return (val / 1000000).toFixed(1).replace('.0', '') + ' Jt';
     } else if (val >= 1000) {
-        return (val / 1000).toFixed(0) + ' Rb';
+        return (val / 1000).toFixed(val < 10000 ? 1 : 0).replace('.0', '') + ' Rb';
     }
-    return val;
+    return Math.round(val);
 }
 
 // Render Public Projects List
