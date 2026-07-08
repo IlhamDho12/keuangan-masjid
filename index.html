@@ -82,16 +82,12 @@
                         <p>Portal transparansi keuangan dan program dakwah masjid. Saldo kas diperbarui secara amanah dan real-time.</p>
                         <div class="hero-stats">
                             <div class="hero-stat-item">
-                                <span class="label">Total Saldo Kas</span>
-                                <span class="val number-font" id="hero-total-cash">Rp0</span>
+                                <span class="label">Pemasukan Tahun Ini</span>
+                                <span class="val number-font" id="hero-yearly-income">Rp0</span>
                             </div>
                             <div class="hero-stat-item border-l">
-                                <span class="label">Pemasukan Bulan Ini</span>
-                                <span class="val number-font" id="hero-monthly-income">Rp0</span>
-                            </div>
-                            <div class="hero-stat-item border-l">
-                                <span class="label">Pengeluaran Bulan Ini</span>
-                                <span class="val number-font" id="hero-monthly-expense">Rp0</span>
+                                <span class="label">Pengeluaran Tahun Ini</span>
+                                <span class="val number-font" id="hero-yearly-expense">Rp0</span>
                             </div>
                         </div>
                     </div>
@@ -106,19 +102,32 @@
                                 <span class="kpi-value number-font" id="pub-total-cash">Rp0</span>
                             </div>
                             <div class="kpi-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 7h-1V6c0-1.1-.9-2-2-2H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM5 6h11v1H5V6zm14 12H5V9h14v9zm-4-2.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/></svg>
                             </div>
                             <div class="kpi-footer"><span>Status Kas Aktif &amp; Amanah</span></div>
                         </div>
-                        <div class="kpi-card">
-                            <div class="kpi-info">
-                                <h3>Saldo Kas Tunai</h3>
-                                <span class="kpi-value number-font" id="pub-cash-balance">Rp0</span>
+                        <div class="donation-bank-card">
+                            <div class="bank-card-main">
+                                <div class="bank-card-top">
+                                    <div class="bank-brand-mark" id="pub-bank-logo">BRI</div>
+                                </div>
+                                <div class="bank-card-copy">
+                                    <span>No. Rekening</span>
+                                    <strong class="number-font" id="pub-bank-account">-</strong>
+                                </div>
+                                <div class="bank-card-copy">
+                                    <span>Atas Nama</span>
+                                    <strong id="pub-bank-holder">Masjid Raudhatul Khoiriyah</strong>
+                                </div>
                             </div>
-                            <div class="kpi-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                            <div class="bank-card-side">
+                                <span class="bank-card-chip"></span>
+                                <button class="qris-mini-card" type="button" id="btn-show-qris-inline">
+                                    <span>QRIS</span>
+                                    <img id="pub-qris-thumb" src="" alt="QRIS Masjid" style="display:none;">
+                                    <small>Scan</small>
+                                </button>
                             </div>
-                            <div class="kpi-footer"><span>Kas Fisik / Uang Tunai</span></div>
                         </div>
                         <div class="kpi-card bank-balance">
                             <div class="kpi-info">
@@ -135,15 +144,6 @@
                     <div class="schedule-ticker" id="schedule-ticker" style="display:none;">
                         <span class="ticker-label">Jadwal</span>
                         <div class="ticker-track"><span id="schedule-ticker-text"></span></div>
-                    </div>
-
-                    <!-- QRIS Button -->
-                    <div class="qris-promo-card">
-                        <div class="qris-promo-left">
-                            <span class="qris-label">Donasi via QRIS</span>
-                            <p>Scan untuk berdonasi langsung ke rekening resmi masjid</p>
-                        </div>
-                        <button class="btn btn-primary btn-sm" id="btn-show-qris">Scan QRIS</button>
                     </div>
 
                     <!-- Update Info -->
@@ -412,27 +412,18 @@
                                     <label for="tx-date">Tanggal Transaksi <span class="required">*</span></label>
                                     <input type="date" id="tx-date" required>
                                 </div>
-                                <div class="form-row-double">
-                                    <div class="form-group">
-                                        <label for="tx-type">Jenis Kas <span class="required">*</span></label>
-                                        <select id="tx-type" required>
-                                            <option value="income">Pemasukan (Uang Masuk)</option>
-                                            <option value="expense">Pengeluaran (Uang Keluar)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="tx-storage">Penyimpanan <span class="required">*</span></label>
-                                        <select id="tx-storage" required>
-                                            <option value="cash">Kas Fisik/Tunai</option>
-                                            <option value="bank">Rekening Bank</option>
-                                        </select>
-                                    </div>
+                                <div class="form-group">
+                                    <label for="tx-type">Jenis Kas <span class="required">*</span></label>
+                                    <select id="tx-type" required>
+                                        <option value="income">Pemasukan (Uang Masuk)</option>
+                                        <option value="expense">Pengeluaran (Uang Keluar)</option>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="tx-amount">Nominal (Rupiah) <span class="required">*</span></label>
                                     <div class="input-group-prefix">
                                         <span class="input-prefix-label">Rp</span>
-                                        <input type="number" id="tx-amount" min="1" placeholder="Masukkan angka saja. Contoh: 100000" required>
+                                        <input type="text" id="tx-amount" inputmode="numeric" autocomplete="off" placeholder="Contoh: 100.000" required>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -496,11 +487,11 @@
                                 <div class="form-row-double">
                                     <div class="form-group">
                                         <label for="proj-target">Target Dana (Rupiah) <span class="required">*</span></label>
-                                        <input type="number" id="proj-target" min="1" placeholder="Contoh: 15000000" required>
+                                        <input type="text" id="proj-target" inputmode="numeric" autocomplete="off" placeholder="Contoh: 15.000.000" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="proj-collected">Dana Terkumpul Awal</label>
-                                        <input type="number" id="proj-collected" min="0" value="0" placeholder="Contoh: 2500000">
+                                        <input type="text" id="proj-collected" inputmode="numeric" autocomplete="off" value="0" placeholder="Contoh: 2.500.000">
                                     </div>
                                 </div>
                                 <div class="form-group">

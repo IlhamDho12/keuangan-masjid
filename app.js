@@ -90,6 +90,10 @@ function prepareQrisImageFile(file, maxSize = 900) {
     });
 }
 
+function getActiveQrisSource() {
+    return state.tempQrisImageBase64 !== null ? state.tempQrisImageBase64 : state.qrisImage;
+}
+
 const INITIAL_COMMITTEE_MEMBERS = [
     { id: 'committee-mosque-chair', group: 'mosque', name: 'Supriyadi', role: 'Ketua', photo_url: null },
     { id: 'committee-mosque-secretary', group: 'mosque', name: 'Dr. Rahmad', role: 'Sekretaris', photo_url: null },
@@ -106,36 +110,11 @@ const INITIAL_COMMITTEE_MEMBERS = [
     { id: 'committee-youth-public-relations', group: 'youth', name: 'Ronal', role: 'Humas', photo_url: null }
 ];
 
-const INITIAL_GALLERY_ITEMS = [
-    { id: 'gallery-demo-1', date: getRelativeDateString(2), title: 'Pengajian Bulanan Jamaah', description: 'Kegiatan pengajian rutin bersama jamaah sekitar masjid setelah salat Magrib.', image_url: createDemoGalleryImage('Pengajian Bulanan', '#065f46', '#0f766e') },
-    { id: 'gallery-demo-2', date: getRelativeDateString(9), title: 'Kerja Bakti Masjid', description: 'Gotong royong membersihkan area masjid, halaman, dan tempat wudu bersama pengurus serta remaja masjid.', image_url: createDemoGalleryImage('Kerja Bakti', '#0f766e', '#f59e0b') },
-    { id: 'gallery-demo-3', date: getRelativeDateString(18), title: 'Santunan Jumat Berkah', description: 'Penyaluran paket bantuan untuk warga sekitar sebagai bagian dari program sosial masjid.', image_url: createDemoGalleryImage('Jumat Berkah', '#064e3b', '#15803d') }
-];
-
-const INITIAL_SCHEDULES = [
-    { id: 'schedule-demo-1', date: getRelativeDateString(-2), time: '19:30', title: 'Yasinan Malam Jumat', description: 'Pembacaan Yasin dan doa bersama jamaah.', pic: 'Pengurus Masjid', show_ticker: true, status: 'active', completed_at: null, auto_delete_at: null },
-    { id: 'schedule-demo-2', date: getRelativeDateString(-5), time: '16:00', title: 'Pengajian Remaja Masjid', description: 'Kajian rutin dan pembinaan remaja masjid.', pic: 'Remaja Masjid', show_ticker: true, status: 'active', completed_at: null, auto_delete_at: null }
-];
-
-const INITIAL_TRANSACTIONS = [
-    { id: 'tx-demo-1', date: getRelativeDateString(0), amount: 2750000, type: 'income', description: 'Infak Jumat pekan pertama Juli', storage: 'cash', receipt_url: null },
-    { id: 'tx-demo-2', date: getRelativeDateString(1), amount: 1500000, type: 'income', description: 'Transfer donatur untuk program santunan', storage: 'bank', receipt_url: null },
-    { id: 'tx-demo-3', date: getRelativeDateString(2), amount: 420000, type: 'expense', description: 'Pembelian perlengkapan kebersihan masjid', storage: 'cash', receipt_url: null },
-    { id: 'tx-demo-4', date: getRelativeDateString(6), amount: 875000, type: 'expense', description: 'Pembayaran tagihan listrik dan air', storage: 'bank', receipt_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23f1f5f9"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%2364748b">BUKTI PEMBAYARAN UTILITAS</text></svg>' },
-    { id: 'tx-demo-5', date: '2026-05-18', amount: 3200000, type: 'income', description: 'Donasi pembangunan kanopi halaman', storage: 'bank', receipt_url: null }
-];
-
-const INITIAL_PROJECTS = [
-    { id: 'proj-demo-1', title: 'Perbaikan Sound System Masjid', target_amount: 8500000, collected_amount: 4250000, status: 'active', description: 'Penggantian mixer audio dan beberapa mikrofon agar suara imam serta penceramah lebih jelas.' },
-    { id: 'proj-demo-2', title: 'Program Paket Sembako Jumat Berkah', target_amount: 6000000, collected_amount: 6000000, status: 'completed', description: 'Pengadaan paket sembako untuk warga sekitar masjid yang membutuhkan.' },
-    { id: 'proj-demo-3', title: 'Pengecatan Pagar Depan', target_amount: 4500000, collected_amount: 900000, status: 'active', description: 'Pengecatan ulang pagar depan dan gerbang kecil agar area masjid terlihat lebih rapi.' }
-];
-
-const INITIAL_FEEDBACKS = [
-    { id: 'fb-demo-1', sender_name: 'Ibu Sari', phone_number: '081234567890', message: 'Mohon jadwal kerja bakti kebersihan masjid diumumkan lebih awal agar jamaah bisa ikut membantu.', status: 'unread', created_at: getRelativeDateString(0) },
-    { id: 'fb-demo-2', sender_name: 'Hamba Allah', phone_number: '', message: 'Laporan kas sudah mudah dibaca. Semoga fitur bukti transaksi bisa terus dilengkapi.', status: 'read', created_at: getRelativeDateString(3) },
-    { id: 'fb-demo-3', sender_name: 'Pak Dani', phone_number: '085612345678', message: 'Usul agar program perbaikan sound system diprioritaskan sebelum kegiatan pengajian bulanan.', status: 'unread', created_at: getRelativeDateString(5) }
-];
+const INITIAL_GALLERY_ITEMS = [];
+const INITIAL_SCHEDULES = [];
+const INITIAL_TRANSACTIONS = [];
+const INITIAL_PROJECTS = [];
+const INITIAL_FEEDBACKS = [];
 
 // ================= APP STATE MANAGEMENT =================
 let state = {
@@ -423,19 +402,19 @@ function materializeCommitteeMembers() {
 
 function materializeGalleryItems() {
     if (!Array.isArray(state.galleryItems)) {
-        state.galleryItems = INITIAL_GALLERY_ITEMS.map(item => ({ ...item }));
+        state.galleryItems = [];
     }
 }
 
 function materializeSchedules() {
     if (!Array.isArray(state.schedules)) {
-        state.schedules = INITIAL_SCHEDULES.map(item => ({ ...item }));
+        state.schedules = [];
     }
     state.schedules = cleanupExpiredSchedules(state.schedules);
 }
 
 function getSchedulesForDisplay() {
-    return cleanupExpiredSchedules(Array.isArray(state.schedules) ? state.schedules : INITIAL_SCHEDULES);
+    return cleanupExpiredSchedules(Array.isArray(state.schedules) ? state.schedules : []);
 }
 
 function getActiveSchedules() {
@@ -464,7 +443,7 @@ function getFilteredGalleryItems() {
 }
 
 function getGalleryItemsForDisplay() {
-    return Array.isArray(state.galleryItems) ? state.galleryItems : INITIAL_GALLERY_ITEMS;
+    return Array.isArray(state.galleryItems) ? state.galleryItems : [];
 }
 
 
@@ -525,9 +504,11 @@ function updateQrisDisplay() {
     const previewEl = document.getElementById('qris-settings-preview');
     const removeBtn = document.getElementById('btn-remove-qris');
     const modalImg = document.getElementById('qris-uploaded-image');
+    const publicThumb = document.getElementById('pub-qris-thumb');
     const emptyState = document.getElementById('qris-empty-state');
     const downloadBtn = document.getElementById('btn-download-qris');
-    const qrisSource = state.tempQrisImageBase64 !== null ? state.tempQrisImageBase64 : state.qrisImage;
+    const qrisSource = getActiveQrisSource();
+    const publicQrisSource = state.qrisImage;
 
     if (previewEl) {
         previewEl.innerHTML = qrisSource
@@ -541,14 +522,26 @@ function updateQrisDisplay() {
     }
 
     if (modalImg && emptyState) {
-        if (state.qrisImage) {
-            modalImg.src = state.qrisImage;
+        if (publicQrisSource) {
+            modalImg.src = publicQrisSource;
             modalImg.style.display = 'block';
             emptyState.style.display = 'none';
         } else {
             modalImg.removeAttribute('src');
             modalImg.style.display = 'none';
             emptyState.style.display = 'flex';
+        }
+    }
+
+    if (publicThumb) {
+        if (publicQrisSource) {
+            publicThumb.src = publicQrisSource;
+            publicThumb.style.display = 'block';
+            publicThumb.parentElement?.classList.remove('is-empty');
+        } else {
+            publicThumb.removeAttribute('src');
+            publicThumb.style.display = 'none';
+            publicThumb.parentElement?.classList.add('is-empty');
         }
     }
 
@@ -627,6 +620,17 @@ function formatCurrency(value) {
     }).format(value);
 }
 
+function formatNominalInput(value) {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    if (!digits) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(digits));
+}
+
+function parseNominalInput(value) {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    return digits ? Number(digits) : 0;
+}
+
 function getTransactions() {
     return Array.isArray(state.transactions) ? state.transactions : [];
 }
@@ -687,6 +691,28 @@ function calculateMonthlyExpense() {
         }
     });
     return expense;
+}
+
+function calculateYearlyIncome() {
+    const currentYear = new Date().getFullYear().toString();
+    return getTransactions().reduce((total, tx) => {
+        const amount = parseFloat(tx.amount);
+        if (tx.type === 'income' && tx.date?.substr(0, 4) === currentYear && Number.isFinite(amount)) {
+            return total + amount;
+        }
+        return total;
+    }, 0);
+}
+
+function calculateYearlyExpense() {
+    const currentYear = new Date().getFullYear().toString();
+    return getTransactions().reduce((total, tx) => {
+        const amount = parseFloat(tx.amount);
+        if (tx.type === 'expense' && tx.date?.substr(0, 4) === currentYear && Number.isFinite(amount)) {
+            return total + amount;
+        }
+        return total;
+    }, 0);
 }
 
 // Switch App Mode (public | auth | admin)
@@ -843,8 +869,12 @@ function renderPublicView() {
     
     // Set KPI Values
     document.getElementById('pub-total-cash').textContent = formatCurrency(balances.total);
-    document.getElementById('pub-cash-balance').textContent = formatCurrency(balances.cash);
-    document.getElementById('pub-bank-balance').textContent = formatCurrency(balances.bank);
+    const bankLogoEl = document.getElementById('pub-bank-logo');
+    const bankAccountEl = document.getElementById('pub-bank-account');
+    const bankHolderEl = document.getElementById('pub-bank-holder');
+    if (bankLogoEl) bankLogoEl.textContent = state.bankName || 'BANK';
+    if (bankAccountEl) bankAccountEl.textContent = state.bankAccountNumber || '-';
+    if (bankHolderEl) bankHolderEl.textContent = state.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
 
     const bankDetailsEl = document.getElementById('pub-bank-details');
     if (bankDetailsEl) {
@@ -878,9 +908,8 @@ function renderPublicView() {
     });
 
     // Set Hero Section Values
-    document.getElementById('hero-total-cash').textContent = formatCurrency(balances.total);
-    document.getElementById('hero-monthly-income').textContent = formatCurrency(calculateMonthlyIncome());
-    document.getElementById('hero-monthly-expense').textContent = formatCurrency(calculateMonthlyExpense());
+    document.getElementById('hero-yearly-income').textContent = formatCurrency(calculateYearlyIncome());
+    document.getElementById('hero-yearly-expense').textContent = formatCurrency(calculateYearlyExpense());
 
     // Render components
     renderSVGChart();
@@ -1520,8 +1549,7 @@ window.editTransaction = function(txId) {
     // Populate form fields with existing data
     document.getElementById('tx-date').value = tx.date;
     document.getElementById('tx-type').value = tx.type;
-    document.getElementById('tx-storage').value = tx.storage;
-    document.getElementById('tx-amount').value = tx.amount;
+    document.getElementById('tx-amount').value = formatNominalInput(tx.amount);
     document.getElementById('tx-desc').value = tx.description;
 
     // Show receipt preview if exists
@@ -1580,14 +1608,12 @@ function handleAdminTxSubmit(e) {
     e.preventDefault();
     const dateInput = document.getElementById('tx-date');
     const typeSelect = document.getElementById('tx-type');
-    const storageSelect = document.getElementById('tx-storage');
     const amountInput = document.getElementById('tx-amount');
     const descInput = document.getElementById('tx-desc');
 
     const dateVal = dateInput.value;
     const typeVal = typeSelect.value;
-    const storageVal = storageSelect.value;
-    const amountVal = parseFloat(amountInput.value);
+    const amountVal = parseNominalInput(amountInput.value);
     const descVal = descInput.value.trim();
 
     if (!dateVal || !amountVal || !descVal) {
@@ -1606,7 +1632,7 @@ function handleAdminTxSubmit(e) {
                     ...state.transactions[idx],
                     date: dateVal,
                     type: typeVal,
-                    storage: storageVal,
+                    storage: state.transactions[idx].storage || 'cash',
                     amount: amountVal,
                     description: descVal,
                     receipt_url: state.tempReceiptBase64 !== null ? state.tempReceiptBase64 : state.transactions[idx].receipt_url
@@ -1628,7 +1654,7 @@ function handleAdminTxSubmit(e) {
                 date: dateVal,
                 amount: amountVal,
                 type: typeVal,
-                storage: storageVal,
+                storage: 'cash',
                 description: descVal,
                 receipt_url: state.tempReceiptBase64
             };
@@ -1742,8 +1768,8 @@ function handleAdminProjectSubmit(e) {
     const descInput = document.getElementById('proj-desc');
 
     const titleVal = titleInput.value.trim();
-    const targetVal = parseFloat(targetInput.value);
-    const collectedVal = parseFloat(collectedInput.value) || 0;
+    const targetVal = parseNominalInput(targetInput.value);
+    const collectedVal = parseNominalInput(collectedInput.value);
     const descVal = descInput.value.trim();
 
     if (!titleVal || !targetVal) return;
@@ -2085,7 +2111,8 @@ function formatDatabase() {
 
 // Generate and Download official QRIS code sheet as a high-resolution PNG image
 function downloadQRIS() {
-    if (!state.qrisImage) {
+    const qrisSource = state.qrisImage;
+    if (!qrisSource) {
         showToast('QRIS belum diunggah dari halaman pengaturan admin.', 'error');
         return;
     }
@@ -2093,7 +2120,7 @@ function downloadQRIS() {
     try {
         const link = document.createElement('a');
         link.download = 'QRIS_Masjid_Raudhatul_Khoiriyah.png';
-        link.href = state.qrisImage;
+        link.href = qrisSource;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -3068,9 +3095,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('public-feedback-form').addEventListener('submit', handlePublicFeedbackSubmit);
 
     // 6. QRIS Modal triggers
-    document.getElementById('btn-show-qris').addEventListener('click', () => {
+    const openQrisModal = () => {
         document.getElementById('modal-qris').classList.add('active');
-    });
+    };
+    document.getElementById('btn-show-qris')?.addEventListener('click', openQrisModal);
+    document.getElementById('btn-show-qris-inline')?.addEventListener('click', openQrisModal);
     document.getElementById('close-qris-modal').addEventListener('click', () => {
         document.getElementById('modal-qris').classList.remove('active');
     });
@@ -3309,15 +3338,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 11. Nominal Input filtering (remove leading zeros)
-    const txAmountInput = document.getElementById('tx-amount');
-    if (txAmountInput) {
-        txAmountInput.addEventListener('input', (e) => {
-            if (e.target.value.startsWith('0') && e.target.value.length > 1) {
-                e.target.value = e.target.value.replace(/^0+/, '');
-            }
+    // 11. Nominal input formatter
+    ['tx-amount', 'proj-target', 'proj-collected'].forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        input.addEventListener('input', (e) => {
+            const formatted = formatNominalInput(e.target.value);
+            e.target.value = formatted || (inputId === 'proj-collected' ? '0' : '');
         });
-    }
+        input.addEventListener('focus', (e) => {
+            if (inputId === 'proj-collected' && e.target.value === '0') e.target.select();
+        });
+    });
 
     // 13. Settings Actions
     document.getElementById('btn-save-pw').addEventListener('click', handleChangePassword);
