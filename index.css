@@ -926,7 +926,6 @@ input:focus, select:focus, textarea:focus {
 .hero-stat-item.border-l { border-left: 1px solid rgba(255,255,255,0.2); }
 .hero-stat-item .label { font-size: 0.55rem; text-transform: uppercase; color: var(--primary-100); font-weight: 600; margin-bottom: 0.1rem; }
 .hero-stat-item .val { font-size: 0.9rem; font-weight: 700; color: #fff; }
-
 /* KPI Cards (Overview Grid) */
 .overview-grid { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
 .kpi-card { background: #fff; border-radius: var(--radius-md); padding: 1rem; border: 1px solid var(--neutral-200); position: relative; overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
@@ -939,6 +938,130 @@ input:focus, select:focus, textarea:focus {
 .kpi-card.total-balance .kpi-value { color: #fff; }
 .kpi-card.total-balance .kpi-icon { color: rgba(255,255,255,0.1); }
 .kpi-card.bank-balance { display: none; }
+.prayer-finance-preview {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(4, 120, 87, 0.16);
+    background:
+        linear-gradient(90deg, rgba(4, 120, 87, 0.08), transparent 28%),
+        linear-gradient(135deg, #ffffff 0%, #f8fafc 46%, #ecfdf5 100%);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+.prayer-finance-preview::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0.24rem;
+    background:
+        linear-gradient(180deg, var(--primary-700), var(--accent-500));
+    pointer-events: none;
+}
+.prayer-date-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.42rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.48rem;
+    border-bottom: 1px solid rgba(15, 118, 110, 0.1);
+}
+.prayer-date-main {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+.prayer-date-row strong {
+    color: var(--primary-700);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+.date-separator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    background: transparent;
+    font-size: 1.05rem;
+    opacity: 0.9;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.hijri-date {
+    color: var(--primary-700);
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.prayer-compact-grid {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.25rem;
+}
+.prayer-time-item {
+    min-width: 0;
+    flex: 1;
+    padding: 0.34rem 0.2rem 0.2rem;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
+    text-align: center;
+    position: relative;
+}
+.prayer-time-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0.32rem;
+    height: 0.32rem;
+    border-radius: 50%;
+    background: rgba(100, 116, 139, 0.35);
+    transform: translateX(-50%);
+}
+.prayer-time-item span {
+    display: block;
+    color: var(--neutral-500);
+    font-size: 0.56rem;
+    font-weight: 800;
+}
+.prayer-time-item strong {
+    display: block;
+    margin-top: 0.12rem;
+    color: var(--neutral-900);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+}
+.prayer-time-item.is-soon::before {
+    background: var(--accent-500);
+    box-shadow: 0 0 0 0.16rem rgba(245, 158, 11, 0.13);
+}
+.prayer-time-item.is-current {
+    border-radius: var(--radius-sm);
+    background: rgba(4, 120, 87, 0.08);
+}
+.prayer-time-item.is-current::before {
+    background: var(--primary-700);
+    box-shadow: 0 0 0 0.16rem rgba(4, 120, 87, 0.14);
+}
+.prayer-time-item.is-current span,
+.prayer-time-item.is-current strong {
+    color: var(--primary-900);
+}
+.prayer-time-item.is-past::before {
+    background: rgba(100, 116, 139, 0.24);
+}
 .donation-bank-card {
     position: relative;
     overflow: hidden;
@@ -1178,8 +1301,27 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Update Info Bar */
-.update-info-bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem; background: var(--neutral-200); border-radius: var(--radius-sm); font-size: 0.7rem; color: var(--neutral-700); margin-bottom: 1rem; justify-content: center; }
-.update-info-bar svg { color: var(--primary-700); }
+.update-info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    font-size: 0.7rem;
+    color: var(--neutral-500);
+    font-weight: 600;
+}
+.update-info-bar svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--primary-700);
+    filter: drop-shadow(0 2px 4px rgba(4, 120, 87, 0.16));
+    flex-shrink: 0;
+}
 
 /* QRIS Promo Card */
 .qris-promo-card { background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%); border-radius: var(--radius-md); padding: 1rem; display: flex; justify-content: space-between; align-items: center; color: #fff; box-shadow: var(--shadow-sm); gap: 0.75rem; }

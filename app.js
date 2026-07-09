@@ -13,6 +13,36 @@ const ADMIN_EMAILS = [ADMIN_LOGIN_EMAIL];
 const APP_SETTINGS_DOC = 'main';
 const PUBLIC_ACCESS_URL = 'https://keuangan-masjid-rk.web.app';
 const PUBLIC_ACCESS_QR_SRC = 'assets/access-qr.png?v=20260701';
+const PRAYER_LOCATION = {
+    latitude: -3.9716,
+    longitude: 103.0712,
+    timezone: 'Asia/Jakarta',
+    method: 20
+};
+const PRAYER_ITEMS = [
+    { key: 'Fajr', elementId: 'prayer-time-fajr' },
+    { key: 'Dhuhr', elementId: 'prayer-time-dhuhr' },
+    { key: 'Asr', elementId: 'prayer-time-asr' },
+    { key: 'Maghrib', elementId: 'prayer-time-maghrib' },
+    { key: 'Isha', elementId: 'prayer-time-isha' }
+];
+const PRAYER_GREEN_END_BUFFER_MINUTES = {
+    Fajr: 0,
+    Dhuhr: 60,
+    Asr: 30,
+    Maghrib: 30,
+    Isha: 60
+};
+const DEFAULT_ADMIN_TAB = 'adm-screen-tx';
+const ADMIN_SCREEN_IDS = [
+    'adm-screen-tx',
+    'adm-screen-program',
+    'adm-screen-aspirasi',
+    'adm-screen-bagan',
+    'adm-screen-galeri',
+    'adm-screen-jadwal',
+    'adm-screen-settings'
+];
 
 let firebaseApp = null;
 let firestoreDb = null;
@@ -20,6 +50,12 @@ let firebaseAuth = null;
 let firebaseReady = false;
 let cropperInstance = null;
 let activeCropCallback = null;
+let prayerScheduleState = {
+    dateKey: '',
+    timings: null,
+    gregorianLabel: '',
+    hijriLabel: ''
+};
 
 if (typeof firebase !== 'undefined') {
     firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
@@ -65,7 +101,7 @@ function compressImageFile(file, maxSize = 960, quality = 0.72) {
     });
 }
 
-function prepareQrisImageFile(file, maxSize = 900) {
+function prepareQrisImageFile(file, maxSize = 720) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = () => reject(new Error('Gagal membaca file QRIS.'));
@@ -82,7 +118,14 @@ function prepareQrisImageFile(file, maxSize = 900) {
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL('image/png'));
+                const pngData = canvas.toDataURL('image/png');
+                if (pngData.length <= 650000) {
+                    resolve(pngData);
+                    return;
+                }
+
+                ctx.imageSmoothingEnabled = true;
+                resolve(canvas.toDataURL('image/jpeg', 0.82));
             };
             img.src = reader.result;
         };
@@ -131,7 +174,7 @@ let state = {
     qrisImage: '',
     isAdminAuthenticated: false,
     currentRole: sessionStorage.getItem('current_role') || 'public', // 'public' | 'admin'
-    activeAdminTab: 'adm-screen-tx',
+    activeAdminTab: sessionStorage.getItem('active_admin_tab') || DEFAULT_ADMIN_TAB,
     editingTxId: null,
     tempReceiptBase64: null,
     committeeMembers: [],
@@ -456,9 +499,6 @@ function updateProfileDisplay() {
     
     const inputNameEl = document.getElementById('change-admin-name');
     const inputRoleEl = document.getElementById('change-admin-role');
-    const inputBankNameEl = document.getElementById('change-bank-name');
-    const inputBankAccEl = document.getElementById('change-bank-acc');
-    const inputBankOwnerEl = document.getElementById('change-bank-owner');
     const inputWaNumberEl = document.getElementById('change-wa-number');
 
     if (profileNameEl) profileNameEl.textContent = state.treasurerName;
@@ -466,9 +506,6 @@ function updateProfileDisplay() {
 
     if (inputNameEl) inputNameEl.value = state.treasurerName;
     if (inputRoleEl) inputRoleEl.value = state.treasurerRole;
-    if (inputBankNameEl) inputBankNameEl.value = state.bankName;
-    if (inputBankAccEl) inputBankAccEl.value = state.bankAccountNumber;
-    if (inputBankOwnerEl) inputBankOwnerEl.value = state.bankAccountHolder;
     if (inputWaNumberEl) inputWaNumberEl.value = state.whatsappNumber;
     
     // Determine avatar image source
@@ -751,7 +788,10 @@ function switchMode(mode) {
         document.getElementById('admin-header-profile').style.display = 'flex';
         document.getElementById('header-subtitle').textContent = 'Dashboard Pengurus';
         
-        switchAppScreen('adm-screen-tx', 'admin');
+        const nextAdminTab = ADMIN_SCREEN_IDS.includes(state.activeAdminTab)
+            ? state.activeAdminTab
+            : DEFAULT_ADMIN_TAB;
+        switchAppScreen(nextAdminTab, 'admin');
         renderAdminDashboard();
     }
 }
@@ -820,6 +860,7 @@ function switchAppScreen(screenId, group) {
     
     if (group === 'admin') {
         state.activeAdminTab = screenId;
+        sessionStorage.setItem('active_admin_tab', screenId);
         renderAdminActiveTab();
     }
 }
@@ -867,6 +908,136 @@ window.viewGalleryDetail = function() {
     
     modal.classList.add('active');
 };
+
+function getTodayPrayerDateKey() {
+    return new Date().toLocaleDateString('en-CA', { timeZone: PRAYER_LOCATION.timezone });
+}
+
+function getTodayPrayerApiDate() {
+    const [year, month, day] = getTodayPrayerDateKey().split('-');
+    return `${day}-${month}-${year}`;
+}
+
+function cleanPrayerTime(value) {
+    return String(value || '').replace(/\s*\(.+\)\s*$/, '').trim().slice(0, 5);
+}
+
+function parsePrayerDateTime(timeText, dayOffset = 0) {
+    const dateKey = getTodayPrayerDateKey();
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const [hour, minute] = cleanPrayerTime(timeText).split(':').map(Number);
+    return new Date(year, month - 1, day + dayOffset, hour, minute, 0, 0);
+}
+
+function getPrayerEndDateTime(key, timings) {
+    if (key === 'Fajr') return parsePrayerDateTime(timings.Sunrise);
+    if (key === 'Dhuhr') return parsePrayerDateTime(timings.Asr);
+    if (key === 'Asr') return parsePrayerDateTime(timings.Maghrib);
+    if (key === 'Maghrib') return parsePrayerDateTime(timings.Isha);
+    if (key === 'Isha') return parsePrayerDateTime(timings.Fajr, 1);
+    return null;
+}
+
+function formatPrayerGregorianDate() {
+    return new Date().toLocaleDateString('id-ID', {
+        timeZone: PRAYER_LOCATION.timezone,
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
+function formatPrayerHijriDate(dateInfo) {
+    const hijri = dateInfo?.hijri;
+    if (!hijri) return 'Tanggal Hijriyah tidak tersedia';
+    const month = hijri.month?.en || hijri.month?.ar || '';
+    return `${Number(hijri.day)} ${month} ${hijri.year} H`;
+}
+
+function renderPrayerSchedule() {
+    const gregorianEl = document.getElementById('prayer-date-gregorian');
+    const hijriEl = document.getElementById('prayer-date-hijri');
+
+    if (gregorianEl) gregorianEl.textContent = prayerScheduleState.gregorianLabel || 'Memuat tanggal...';
+    if (hijriEl) hijriEl.textContent = prayerScheduleState.hijriLabel || 'Memuat Hijriyah...';
+
+    if (!prayerScheduleState.timings) return;
+
+    const now = new Date();
+    const prayerTimes = PRAYER_ITEMS.map(item => ({
+        ...item,
+        time: cleanPrayerTime(prayerScheduleState.timings[item.key])
+    })).filter(item => item.time && item.time.includes(':'));
+
+    const prayerRanges = prayerTimes.map(item => {
+        let start = parsePrayerDateTime(item.time);
+        let end = getPrayerEndDateTime(item.key, prayerScheduleState.timings);
+        const todayFajr = parsePrayerDateTime(prayerScheduleState.timings.Fajr);
+        if (item.key === 'Isha' && now < todayFajr) {
+            start = parsePrayerDateTime(item.time, -1);
+            end = todayFajr;
+        }
+        const bufferMinutes = PRAYER_GREEN_END_BUFFER_MINUTES[item.key] || 0;
+        const greenEnd = end
+            ? new Date(end.getTime() - bufferMinutes * 60 * 1000)
+            : start;
+        return { ...item, start, end, greenEnd };
+    });
+
+    const activeRangeIndex = prayerRanges.findIndex(item => item.end && now >= item.start && now < item.end);
+    const currentIndex = prayerRanges.findIndex(item => now >= item.start && now < item.greenEnd);
+    const nextIndex = prayerRanges.findIndex(item => item.start > now);
+    const normalizedNextIndex = nextIndex >= 0 ? nextIndex : 0;
+    const soonIndex = currentIndex >= 0
+        ? -1
+        : (activeRangeIndex >= 0 ? (activeRangeIndex + 1) % prayerRanges.length : normalizedNextIndex);
+
+    prayerRanges.forEach((item, index) => {
+        const timeEl = document.getElementById(item.elementId);
+        const itemEl = document.querySelector(`[data-prayer-key="${item.key}"]`);
+        if (timeEl) timeEl.textContent = item.time;
+        if (!itemEl) return;
+        itemEl.classList.remove('is-past', 'is-current', 'is-soon');
+
+        if (index === currentIndex) {
+            itemEl.classList.add('is-current');
+        } else if (index === soonIndex) {
+            itemEl.classList.add('is-soon');
+        } else if (item.start < now) {
+            itemEl.classList.add('is-past');
+        }
+    });
+}
+
+async function loadPrayerSchedule() {
+    const dateKey = getTodayPrayerDateKey();
+    if (prayerScheduleState.timings && prayerScheduleState.dateKey === dateKey) {
+        renderPrayerSchedule();
+        return;
+    }
+
+    try {
+        const apiDate = getTodayPrayerApiDate();
+        const url = `https://api.aladhan.com/v1/timings/${apiDate}?latitude=${PRAYER_LOCATION.latitude}&longitude=${PRAYER_LOCATION.longitude}&method=${PRAYER_LOCATION.method}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Prayer API HTTP ${response.status}`);
+        const result = await response.json();
+        const data = result?.data;
+        if (!data?.timings) throw new Error('Prayer API response missing timings');
+
+        prayerScheduleState = {
+            dateKey,
+            timings: data.timings,
+            gregorianLabel: formatPrayerGregorianDate(),
+            hijriLabel: formatPrayerHijriDate(data.date)
+        };
+        renderPrayerSchedule();
+    } catch (err) {
+        console.warn('Gagal memuat jadwal sholat dari API.', err);
+        renderPrayerSchedule();
+    }
+}
 
 // ================= RENDER PUBLIC VIEW =================
 function renderPublicView() {
@@ -923,6 +1094,7 @@ function renderPublicView() {
     renderPublicGallery();
     renderPublicSchedules();
     renderScheduleTicker();
+    loadPrayerSchedule();
 }
 
 // Render Custom SVG Chart (Dynamic Filter based on Year and Month Selectors)
@@ -1424,6 +1596,8 @@ function renderAdminActiveTab() {
         renderAdminScheduleList();
     } else if (state.activeAdminTab === 'adm-screen-galeri') {
         renderAdminGalleryList();
+    } else if (state.activeAdminTab === 'adm-screen-settings') {
+        updateProfileDisplay();
     }
 }
 
@@ -2004,29 +2178,20 @@ async function handleAdminLogin(e) {
 function handleSaveProfile() {
     const nameInput = document.getElementById('change-admin-name');
     const roleInput = document.getElementById('change-admin-role');
-    const bankNameInput = document.getElementById('change-bank-name');
-    const bankAccInput = document.getElementById('change-bank-acc');
-    const bankOwnerInput = document.getElementById('change-bank-owner');
     const waNumberInput = document.getElementById('change-wa-number');
 
     const nameVal = nameInput.value.trim();
     const roleVal = roleInput.value.trim();
-    const bankNameVal = bankNameInput.value.trim();
-    const bankAccVal = bankAccInput.value.trim();
-    const bankOwnerVal = bankOwnerInput.value.trim();
     const waNumberVal = waNumberInput.value.trim();
 
-    if (!nameVal || !roleVal || !bankNameVal || !bankAccVal || !bankOwnerVal || !waNumberVal) {
-        showToast('Semua kolom informasi profil dan bank harus diisi!', 'error');
+    if (!nameVal || !roleVal || !waNumberVal) {
+        showToast('Semua kolom profil harus diisi!', 'error');
         return;
     }
 
-    showConfirm('Apakah Anda yakin ingin memperbarui profil bendahara dan informasi bank masjid?', async () => {
+    showConfirm('Apakah Anda yakin ingin memperbarui profil bendahara?', async () => {
         state.treasurerName = nameVal;
         state.treasurerRole = roleVal;
-        state.bankName = bankNameVal;
-        state.bankAccountNumber = bankAccVal;
-        state.bankAccountHolder = bankOwnerVal;
         state.whatsappNumber = waNumberVal;
         if (state.tempQrisImageBase64 !== null) {
             state.qrisImage = state.tempQrisImageBase64;
@@ -2040,7 +2205,7 @@ function handleSaveProfile() {
         }
         updateProfileDisplay();
         renderPublicView();
-        showSuccess('Profil Diperbarui!', 'Alhamdulillah, informasi profil, rekening bank, dan QRIS masjid berhasil diperbarui.');
+        showSuccess('Profil Diperbarui!', 'Alhamdulillah, informasi profil dan QRIS masjid berhasil diperbarui.');
     }, 'Ya, Perbarui', false);
 }
 
@@ -3073,6 +3238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Load data — loadState() is async and will call renderPublicView() internally after data loads
     loadState();
+    setInterval(renderPrayerSchedule, 60000);
 
     // NOTE: Do NOT call renderPublicView() here — loadState() handles it after fetch completes
 
@@ -3308,9 +3474,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = e.target.files[0];
             if (!file) return;
             try {
-                state.tempQrisImageBase64 = await prepareQrisImageFile(file);
+                const nextQrisImage = await prepareQrisImageFile(file);
+                const previousQrisImage = state.qrisImage;
+                state.qrisImage = nextQrisImage;
+                state.tempQrisImageBase64 = null;
+                touchAdminUpdate();
                 updateQrisDisplay();
-                showToast('QRIS siap disimpan. Klik Simpan Perubahan Profil & Bank.');
+                renderPublicView();
+                if (!(await persistAdminState())) {
+                    state.qrisImage = previousQrisImage;
+                    state.tempQrisImageBase64 = nextQrisImage;
+                    updateQrisDisplay();
+                    renderPublicView();
+                    return;
+                }
+                qrisInput.value = '';
+                showToast('QRIS berhasil disimpan.');
             } catch (err) {
                 console.error(err);
                 showToast('Gambar QRIS gagal diproses. Coba pilih gambar lain.', 'error');
