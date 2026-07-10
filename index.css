@@ -136,6 +136,9 @@ input:focus, select:focus, textarea:focus {
 .btn-action:hover { background-color: var(--neutral-200); }
 .btn-action.btn-del:hover { background-color: var(--danger-100); color: var(--danger-600); }
 .btn-action.btn-edit:hover { background-color: #e0f2fe; color: #0284c7; }
+.btn-action.btn-donate { color: var(--primary-700); background-color: var(--primary-50); }
+.btn-action.btn-donate:hover { background-color: var(--primary-100); color: var(--primary-900); transform: translateY(-1px); }
+.project-donation-panel { border-color: var(--primary-200); box-shadow: 0 12px 28px rgba(20, 184, 166, 0.08); }
 
 /* Table Styles */
 .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }

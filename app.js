@@ -184,6 +184,7 @@ let state = {
     tempCommitteePhotoBase64: null,
     tempGalleryImageBase64: null,
     tempQrisImageBase64: null,
+    tempProjectDonationReceiptBase64: null,
     editingScheduleId: null
 };
 
@@ -1701,11 +1702,13 @@ window.showSuccess = function(title, message) {
 // Handle transaction deletion
 window.deleteTransaction = function(txId) {
     showConfirm('Apakah Anda yakin ingin menghapus data transaksi ini? Tindakan ini akan mengupdate kas.', async () => {
+        const deletedTx = state.transactions.find(t => t.id === txId);
         // Clear edit mode if deleting the currently-edited tx
         if (state.editingTxId === txId) {
             state.editingTxId = null;
             resetTxForm();
         }
+        applyProjectDonationDelta(deletedTx?.project_id, -getProjectDonationDelta(deletedTx));
         state.transactions = state.transactions.filter(t => t.id !== txId);
         touchAdminUpdate();
         if (!(await persistAdminState())) {
@@ -1783,6 +1786,26 @@ function resetTxForm() {
     renderAdminTxTab();
 }
 
+function getProjectDonationDelta(tx) {
+    if (!tx || !tx.project_id || tx.type !== 'income') return 0;
+    return Number(tx.amount) || 0;
+}
+
+function applyProjectDonationDelta(projectId, delta) {
+    if (!projectId || !Number.isFinite(delta) || delta === 0) return;
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const targetAmount = Number(project.target_amount) || 0;
+    const currentAmount = Number(project.collected_amount) || 0;
+    const nextAmount = Math.max(0, currentAmount + delta);
+    project.collected_amount = nextAmount;
+
+    if (targetAmount > 0) {
+        project.status = nextAmount >= targetAmount ? 'completed' : 'active';
+    }
+}
+
 // Handle New Transaction Submit (tambah atau edit)
 function handleAdminTxSubmit(e) {
     e.preventDefault();
@@ -1808,15 +1831,19 @@ function handleAdminTxSubmit(e) {
             // === UPDATE MODE ===
             const idx = state.transactions.findIndex(t => t.id === state.editingTxId);
             if (idx !== -1) {
-                state.transactions[idx] = {
-                    ...state.transactions[idx],
+                const previousTx = state.transactions[idx];
+                const nextTx = {
+                    ...previousTx,
                     date: dateVal,
                     type: typeVal,
-                    storage: state.transactions[idx].storage || 'cash',
+                    storage: previousTx.storage || 'cash',
                     amount: amountVal,
                     description: descVal,
-                    receipt_url: state.tempReceiptBase64 !== null ? state.tempReceiptBase64 : state.transactions[idx].receipt_url
+                    receipt_url: state.tempReceiptBase64 !== null ? state.tempReceiptBase64 : previousTx.receipt_url
                 };
+                applyProjectDonationDelta(previousTx.project_id, -getProjectDonationDelta(previousTx));
+                state.transactions[idx] = nextTx;
+                applyProjectDonationDelta(nextTx.project_id, getProjectDonationDelta(nextTx));
             }
             touchAdminUpdate();
             if (!(await persistAdminState())) {
@@ -1890,6 +1917,9 @@ function renderAdminProjectsTab() {
                 </td>
                 <td class="text-center">
                     <div style="display: inline-flex; gap: 0.25rem;">
+                        <button class="btn-action btn-donate" onclick="openProjectDonationForm('${p.id}')" title="Update Donasi">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2C6.48 2 2 5.58 2 10c0 2.92 1.96 5.48 4.89 6.87L6 22l4.49-3.17c.49.08 1 .12 1.51.12 5.52 0 10-3.58 10-8S17.52 2 12 2zm1 12h-2v-3H8V9h3V6h2v3h3v2h-3v3z"/></svg>
+                        </button>
                         ${p.status === 'active' 
                             ? `<button class="btn-action btn-comp" onclick="completeProject('${p.id}')" title="Set Selesai">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
@@ -1938,6 +1968,95 @@ window.deleteProject = function(id) {
         showSuccess('Program Dihapus!', 'Alhamdulillah, program pembangunan berhasil dihapus dari database.');
     });
 };
+
+function resetProjectDonationForm() {
+    state.tempProjectDonationReceiptBase64 = null;
+    document.getElementById('project-donation-form')?.reset();
+    const panel = document.getElementById('project-donation-panel');
+    if (panel) panel.style.display = 'none';
+    const preview = document.getElementById('project-donation-receipt-preview');
+    if (preview) {
+        preview.className = 'file-upload-preview';
+        preview.innerHTML = `<span class="placeholder-text">Opsional, ketuk untuk unggah bukti donasi</span>`;
+    }
+}
+
+window.openProjectDonationForm = function(id) {
+    const project = state.projects.find(p => p.id === id);
+    if (!project) return;
+
+    const panel = document.getElementById('project-donation-panel');
+    const title = document.getElementById('project-donation-title');
+    const projectIdInput = document.getElementById('project-donation-id');
+    const dateInput = document.getElementById('project-donation-date');
+    const amountInput = document.getElementById('project-donation-amount');
+    const descInput = document.getElementById('project-donation-desc');
+    if (!panel || !projectIdInput || !dateInput || !amountInput || !descInput) return;
+
+    state.tempProjectDonationReceiptBase64 = null;
+    projectIdInput.value = project.id;
+    dateInput.value = new Date().toISOString().split('T')[0];
+    amountInput.value = '';
+    descInput.value = `Donasi untuk ${project.title}`;
+    if (title) title.textContent = `Tambah donasi untuk: ${project.title}`;
+
+    const preview = document.getElementById('project-donation-receipt-preview');
+    if (preview) {
+        preview.className = 'file-upload-preview';
+        preview.innerHTML = `<span class="placeholder-text">Opsional, ketuk untuk unggah bukti donasi</span>`;
+    }
+
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    panel.classList.remove('edit-pulse');
+    void panel.offsetWidth;
+    panel.classList.add('edit-pulse');
+};
+
+function handleProjectDonationSubmit(e) {
+    e.preventDefault();
+    const projectId = document.getElementById('project-donation-id')?.value;
+    const project = state.projects.find(p => p.id === projectId);
+    const dateVal = document.getElementById('project-donation-date')?.value;
+    const amountVal = parseNominalInput(document.getElementById('project-donation-amount')?.value || '');
+    const descVal = (document.getElementById('project-donation-desc')?.value || '').trim();
+
+    if (!project) {
+        showToast('Program tidak ditemukan. Pilih ulang dari tabel program.', 'error');
+        return;
+    }
+    if (!dateVal || !amountVal || !descVal) {
+        showToast('Harap isi tanggal, nominal, dan keterangan donasi.', 'error');
+        return;
+    }
+
+    showConfirm(`Tambah donasi ${formatCurrency(amountVal)} ke program "${project.title}"? Transaksi pemasukan akan dibuat otomatis.`, async () => {
+        const newTx = {
+            id: 'tx-' + Date.now(),
+            date: dateVal,
+            amount: amountVal,
+            type: 'income',
+            storage: 'cash',
+            description: descVal,
+            receipt_url: state.tempProjectDonationReceiptBase64,
+            project_id: project.id,
+            project_title: project.title
+        };
+
+        state.transactions.push(newTx);
+        applyProjectDonationDelta(project.id, amountVal);
+        touchAdminUpdate();
+        if (!(await persistAdminState())) {
+            await loadState();
+            return;
+        }
+
+        resetProjectDonationForm();
+        renderAdminDashboard();
+        renderPublicView();
+        showSuccess('Donasi Program Ditambahkan!', 'Nominal program dan riwayat transaksi kas sudah diperbarui otomatis.');
+    }, 'Ya, Tambahkan', false);
+}
 
 // Handle New Project submission
 function handleAdminProjectSubmit(e) {
@@ -3360,9 +3479,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 10. Admin Form Submissions
     document.getElementById('admin-tx-form').addEventListener('submit', handleAdminTxSubmit);
     document.getElementById('admin-project-form').addEventListener('submit', handleAdminProjectSubmit);
+    document.getElementById('project-donation-form')?.addEventListener('submit', handleProjectDonationSubmit);
     document.getElementById('admin-committee-form')?.addEventListener('submit', handleAdminCommitteeSubmit);
     document.getElementById('admin-gallery-form')?.addEventListener('submit', handleAdminGallerySubmit);
     document.getElementById('admin-schedule-form')?.addEventListener('submit', handleAdminScheduleSubmit);
+    document.getElementById('project-donation-cancel')?.addEventListener('click', resetProjectDonationForm);
     document.getElementById('committee-cancel-edit')?.addEventListener('click', resetCommitteeForm);
     document.getElementById('gallery-cancel-edit')?.addEventListener('click', resetGalleryForm);
     document.getElementById('schedule-cancel-edit')?.addEventListener('click', resetScheduleForm);
@@ -3442,6 +3563,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    const projectDonationReceiptInput = document.getElementById('project-donation-receipt');
+    const projectDonationPreview = document.getElementById('project-donation-receipt-preview');
+    if (projectDonationReceiptInput && projectDonationPreview) {
+        projectDonationReceiptInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                state.tempProjectDonationReceiptBase64 = await compressImageFile(file, 960, 0.72);
+                projectDonationPreview.className = 'file-upload-preview has-image';
+                projectDonationPreview.innerHTML = `<img src="${state.tempProjectDonationReceiptBase64}" alt="Pratinjau Bukti Donasi">`;
+                showToast('Bukti donasi berhasil diproses.');
+            } catch (err) {
+                console.error(err);
+                projectDonationReceiptInput.value = '';
+                showToast('Bukti donasi gagal diproses. Coba pilih gambar lain.', 'error');
+            }
+        });
+    }
 
     // 12b. File input reader for treasurer profile picture (Base64 conversion)
     const avatarInput = document.getElementById('change-admin-avatar');
@@ -3524,7 +3664,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 11. Nominal input formatter
-    ['tx-amount', 'proj-target', 'proj-collected'].forEach(inputId => {
+    ['tx-amount', 'proj-target', 'proj-collected', 'project-donation-amount'].forEach(inputId => {
         const input = document.getElementById(inputId);
         if (!input) return;
         input.addEventListener('input', (e) => {
