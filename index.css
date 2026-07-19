@@ -2078,17 +2078,17 @@ input:focus, select:focus, textarea:focus {
         border-radius: var(--radius-md);
     }
 
-    /* Ubah navigasi bawah menjadi kapsul melayang yang premium (Floating Island Dock) */
+    /* Navigasi bawah disejajarkan dengan lebar konten utama */
     .bottom-nav {
-        max-width: 480px;
-        bottom: 24px;
-        border-radius: var(--radius-full);
-        border: 1px solid var(--neutral-200);
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-        background: rgba(255, 255, 255, 0.85) !important;
+        max-width: 860px;
+        bottom: 0;
+        border-radius: 0;
+        border: none;
+        border-top: 1px solid var(--neutral-200);
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        background: rgba(255, 255, 255, 0.95) !important;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     
     /* Hover effect untuk tombol navigasi kapsul */
@@ -2127,6 +2127,11 @@ input:focus, select:focus, textarea:focus {
     .overview-grid {
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
+    }
+
+    /* Navigasi bawah disejajarkan dengan lebar konten di laptop */
+    .bottom-nav {
+        max-width: 1080px;
     }
 }
 

@@ -49,6 +49,7 @@ let firestoreDb = null;
 let firebaseAuth = null;
 let firebaseReady = false;
 let cropperInstance = null;
+let _historyInitialized = false;
 let activeCropCallback = null;
 let prayerScheduleState = {
     dateKey: '',
@@ -760,7 +761,7 @@ function calculateYearlyExpense() {
 }
 
 // Switch App Mode (public | auth | admin)
-function switchMode(mode) {
+function switchMode(mode, preventPushState = false) {
     document.body.className = `mode-${mode}`;
     
     document.querySelectorAll('.screen-group').forEach(g => g.classList.remove('active'));
@@ -773,7 +774,7 @@ function switchMode(mode) {
         document.getElementById('admin-header-profile').style.display = 'none';
         document.getElementById('header-subtitle').textContent = 'Pendopo, Empat Lawang, Sumatera Selatan';
         
-        switchAppScreen('pub-screen-beranda', 'public');
+        switchAppScreen('pub-screen-beranda', 'public', preventPushState);
         renderPublicView();
     } else if (mode === 'auth') {
         document.getElementById('screens-auth').classList.add('active');
@@ -792,7 +793,7 @@ function switchMode(mode) {
         const nextAdminTab = ADMIN_SCREEN_IDS.includes(state.activeAdminTab)
             ? state.activeAdminTab
             : DEFAULT_ADMIN_TAB;
-        switchAppScreen(nextAdminTab, 'admin');
+        switchAppScreen(nextAdminTab, 'admin', preventPushState);
         renderAdminDashboard();
     }
 }
@@ -861,7 +862,13 @@ function switchAppScreen(screenId, group, preventPushState = false) {
 
     // Dorong state baru ke riwayat browser jika bukan dari tombol Back/Previous
     if (!preventPushState) {
-        history.pushState({ screenId, group, mode: state.currentRole }, '', '#' + screenId);
+        const navState = { screenId, group, mode: state.currentRole || 'public' };
+        if (!_historyInitialized) {
+            history.replaceState(navState, '', '#' + screenId);
+            _historyInitialized = true;
+        } else {
+            history.pushState(navState, '', '#' + screenId);
+        }
     }
     
     if (group === 'admin') {
@@ -3340,17 +3347,12 @@ window.deleteSchedule = function(id) {
 
 // ================= EVENT LISTENER INITIALIZATIONS =================
 document.addEventListener('DOMContentLoaded', () => {
-    // Inisialisasi state halaman pertama (Beranda) di riwayat browser
-    if (!history.state) {
-        history.replaceState({ screenId: 'pub-screen-beranda', group: 'public', mode: 'public' }, '', '#pub-screen-beranda');
-    }
-
-    // Tangani aksi tombol Back / Previous browser
+    // Tangani aksi tombol Back / Previous browser (berlaku di semua device: mobile, tablet, laptop)
     window.addEventListener('popstate', (e) => {
         if (e.state) {
             const { screenId, group, mode } = e.state;
             if (mode && mode !== state.currentRole) {
-                switchMode(mode);
+                switchMode(mode, true);
             }
             switchAppScreen(screenId, group, true);
         }
