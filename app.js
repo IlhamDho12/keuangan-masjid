@@ -841,7 +841,7 @@ function navigateAdminMoreScreen(screenId) {
 }
 
 // Switch Bottom Navigation Screen
-function switchAppScreen(screenId, group) {
+function switchAppScreen(screenId, group, preventPushState = false) {
     // Hide all screens in the group
     document.querySelectorAll(`#screens-${group} .app-screen`).forEach(s => s.classList.remove('active'));
     // Show target screen
@@ -858,6 +858,11 @@ function switchAppScreen(screenId, group) {
     
     // Scroll body to top naturally
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Dorong state baru ke riwayat browser jika bukan dari tombol Back/Previous
+    if (!preventPushState) {
+        history.pushState({ screenId, group, mode: state.currentRole }, '', '#' + screenId);
+    }
     
     if (group === 'admin') {
         state.activeAdminTab = screenId;
@@ -3335,6 +3340,22 @@ window.deleteSchedule = function(id) {
 
 // ================= EVENT LISTENER INITIALIZATIONS =================
 document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi state halaman pertama (Beranda) di riwayat browser
+    if (!history.state) {
+        history.replaceState({ screenId: 'pub-screen-beranda', group: 'public', mode: 'public' }, '', '#pub-screen-beranda');
+    }
+
+    // Tangani aksi tombol Back / Previous browser
+    window.addEventListener('popstate', (e) => {
+        if (e.state) {
+            const { screenId, group, mode } = e.state;
+            if (mode && mode !== state.currentRole) {
+                switchMode(mode);
+            }
+            switchAppScreen(screenId, group, true);
+        }
+    });
+
     if (firebaseReady) {
         firebaseAuth.onAuthStateChanged(async (user) => {
             const authenticated = isAdminUser(user);

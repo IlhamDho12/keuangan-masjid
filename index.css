@@ -2013,7 +2013,11 @@ input:focus, select:focus, textarea:focus {
 
 @media (min-width: 768px) {
     /* Perluas batas lebar container utama */
-    .app-header-inner,
+    .app-header-inner {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0;
+    }
     .app-screen,
     .more-sheet-panel {
         max-width: 860px;
@@ -2109,7 +2113,11 @@ input:focus, select:focus, textarea:focus {
 
 @media (min-width: 1024px) {
     /* Perluas container utama untuk ukuran Laptop/Komputer */
-    .app-header-inner,
+    .app-header-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0;
+    }
     .app-screen,
     .more-sheet-panel {
         max-width: 1080px;
