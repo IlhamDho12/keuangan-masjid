@@ -2006,3 +2006,89 @@ input:focus, select:focus, textarea:focus {
     flex-shrink: 0;
     align-items: center;
 }
+
+/* ============================================================== */
+/* ================== RESPONSIVE TABLET & LAPTOP ================ */
+/* ============================================================== */
+
+@media (min-width: 768px) {
+    /* Perluas batas lebar container utama */
+    .app-header-inner,
+    .app-screen,
+    .more-sheet-panel {
+        max-width: 860px;
+    }
+    
+    /* Ubah KPI Card (Total Kas, Bank, dll) menjadi berjejer kesamping (3 Kolom) */
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    /* Menghilangkan margin vertikal karena sudah menggunakan grid gap */
+    .overview-grid > * {
+        margin-bottom: 0 !important;
+    }
+
+    /* Khusus untuk kartu gambar bank agar rapi menyesuaikan grid */
+    .donation-bank-card.image-card {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .donation-bank-card.image-card img {
+        height: 100%;
+        width: 100%;
+        object-fit: contain;
+    }
+
+    /* Ubah navigasi bawah menjadi kapsul melayang yang premium (Floating Island Dock) */
+    .bottom-nav {
+        max-width: 480px;
+        bottom: 24px;
+        border-radius: var(--radius-full);
+        border: 1px solid var(--neutral-200);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    /* Hover effect untuk tombol navigasi kapsul */
+    .bnav-btn:hover svg {
+        transform: translateY(-2px);
+    }
+
+    /* Jadwal Sholat dibuat lebih lebar kesamping */
+    .prayer-compact-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.75rem;
+    }
+
+    /* Pengurus & Detail Admin layout */
+    .admin-dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 1.25rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    /* Perluas container utama untuk ukuran Laptop/Komputer */
+    .app-header-inner,
+    .app-screen,
+    .more-sheet-panel {
+        max-width: 1080px;
+    }
+    
+    /* Layout grid beranda di laptop (KPI kiri, konten tambahan kanan jika diperlukan) */
+    .overview-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+}
+
