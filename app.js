@@ -863,11 +863,12 @@ function switchAppScreen(screenId, group, preventPushState = false) {
     // Dorong state baru ke riwayat browser jika bukan dari tombol Back/Previous
     if (!preventPushState) {
         const navState = { screenId, group, mode: state.currentRole || 'public' };
+        const cleanUrl = window.location.pathname + window.location.search;
         if (!_historyInitialized) {
-            history.replaceState(navState, '', '#' + screenId);
+            history.replaceState(navState, '', cleanUrl);
             _historyInitialized = true;
         } else {
-            history.pushState(navState, '', '#' + screenId);
+            history.pushState(navState, '', cleanUrl);
         }
     }
     
