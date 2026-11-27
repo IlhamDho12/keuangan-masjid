@@ -1,48 +1,75 @@
 {
   "transactions": [
     {
-      "id": "tx-demo-1",
-      "date": "2026-07-01",
-      "amount": 2750000,
+      "id": "tx-20261030-saldo-kas",
+      "date": "2026-10-30",
+      "amount": 1472000,
       "type": "income",
-      "description": "Infak Jumat pekan pertama Juli",
+      "description": "Saldo kas",
       "storage": "cash",
       "receipt_url": null
     },
     {
-      "id": "tx-demo-2",
-      "date": "2026-06-30",
-      "amount": 1500000,
+      "id": "tx-20261030-infaq-kotak-amal",
+      "date": "2026-10-30",
+      "amount": 500000,
       "type": "income",
-      "description": "Transfer donatur untuk program santunan",
-      "storage": "bank",
-      "receipt_url": null
-    },
-    {
-      "id": "tx-demo-3",
-      "date": "2026-06-29",
-      "amount": 420000,
-      "type": "expense",
-      "description": "Pembelian perlengkapan kebersihan masjid",
+      "description": "Infaq kotak amal",
       "storage": "cash",
       "receipt_url": null
     },
     {
-      "id": "tx-demo-4",
-      "date": "2026-06-25",
-      "amount": 875000,
-      "type": "expense",
-      "description": "Pembayaran tagihan listrik dan air",
-      "storage": "bank",
-      "receipt_url": "data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"200\" viewBox=\"0 0 300 200\"><rect width=\"300\" height=\"200\" fill=\"%23f1f5f9\"/><text x=\"50%25\" y=\"50%25\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-family=\"sans-serif\" font-size=\"16\" fill=\"%2364748b\">BUKTI PEMBAYARAN UTILITAS</text></svg>"
+      "id": "tx-20261102-sekolah-abu-bakar",
+      "date": "2026-11-02",
+      "amount": 250000,
+      "type": "income",
+      "description": "Dari Sekolah Abu Bakar",
+      "storage": "cash",
+      "receipt_url": null
     },
     {
-      "id": "tx-demo-5",
-      "date": "2026-05-18",
-      "amount": 3200000,
+      "id": "tx-20261102-insentif-marbot-tpa",
+      "date": "2026-11-02",
+      "amount": 1450000,
+      "type": "expense",
+      "description": "Insentif marbot dan TPA",
+      "storage": "cash",
+      "receipt_url": null
+    },
+    {
+      "id": "tx-20261106-operasional-masjid",
+      "date": "2026-11-06",
+      "amount": 300000,
+      "type": "expense",
+      "description": "Operasional masjid",
+      "storage": "cash",
+      "receipt_url": null
+    },
+    {
+      "id": "tx-20261106-infaq-kotak-amal",
+      "date": "2026-11-06",
+      "amount": 650000,
       "type": "income",
-      "description": "Donasi pembangunan kanopi halaman",
-      "storage": "bank",
+      "description": "Infaq kotak amal",
+      "storage": "cash",
+      "receipt_url": null
+    },
+    {
+      "id": "tx-20261113-operasional-masjid",
+      "date": "2026-11-13",
+      "amount": 245000,
+      "type": "expense",
+      "description": "Operasional masjid",
+      "storage": "cash",
+      "receipt_url": null
+    },
+    {
+      "id": "tx-20261113-infaq-jumat",
+      "date": "2026-11-13",
+      "amount": 600000,
+      "type": "income",
+      "description": "Infaq Jumat",
+      "storage": "cash",
       "receipt_url": null
     }
   ],
@@ -99,11 +126,40 @@
     }
   ],
   "adminPassword": "raudhatul",
-  "treasurerName": "Ardi Toher",
+  "treasurerName": "JALAL NASRODIN",
   "treasurerRole": "Bendahara",
   "treasurerAvatar": "",
   "bankName": "Bri",
   "bankAccountNumber": "71234567890",
   "bankAccountHolder": "Masjid Raudhatul Khoiriyah",
-  "whatsappNumber": "6285369463373"
+  "whatsappNumber": "6285369463373",
+  "committeeMembers": [
+    { "id": "committee-chair", "group": "mosque", "name": "ANAS GHOFUR", "role": "Ketua Umum", "photo_url": null },
+    { "id": "committee-advisor-1", "group": "mosque", "name": "H. Satria Thoha, S.E., M.M.", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-2", "group": "mosque", "name": "H. Suwardi", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-3", "group": "mosque", "name": "H. Hendra Jaya, S.H., M.H.", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-4", "group": "mosque", "name": "Drs. H. Kamroni", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-5", "group": "mosque", "name": "H. Kusno, S.Ag., M.Pd.I.", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-6", "group": "mosque", "name": "H. Mujiburrohman, S.Ag., M.Pd.I.", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-7", "group": "mosque", "name": "Drs. H. Marsudiluhur", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-advisor-8", "group": "mosque", "name": "H. Yustam Efendi, S.H., M.M.", "role": "Dewan Penasihat Takmir", "photo_url": null },
+    { "id": "committee-vice-chair-1", "group": "mosque", "name": "ALIMIN, S.Ag.", "role": "Ketua I", "photo_url": null },
+    { "id": "committee-vice-chair-2", "group": "mosque", "name": "H. MISRIN", "role": "Ketua II", "photo_url": null },
+    { "id": "committee-vice-chair-3", "group": "mosque", "name": "H. DANNI WAHYUDIALI", "role": "Ketua III", "photo_url": null },
+    { "id": "committee-secretary-1", "group": "mosque", "name": "DEDY NURHIDAYAT", "role": "Sekretaris Umum", "photo_url": null },
+    { "id": "committee-secretary-2", "group": "mosque", "name": "EZA ROSIDI", "role": "Sekretaris II", "photo_url": null },
+    { "id": "committee-treasurer-1", "group": "mosque", "name": "JALAL NASRODIN", "role": "Bendahara I", "photo_url": null },
+    { "id": "committee-treasurer-2", "group": "mosque", "name": "M. RIZAL", "role": "Bendahara II", "photo_url": null },
+    { "id": "committee-phbi", "group": "mosque", "name": "ALKODRI", "role": "Koordinator Peringatan Hari Besar Islam", "photo_url": null },
+    { "id": "committee-development", "group": "mosque", "name": "ANAS TAROREH", "role": "Koordinator Pembangunan", "photo_url": null },
+    { "id": "committee-ritual", "group": "mosque", "name": "PROF. DR. HJ. FENI ROSALIA, M.SI.", "role": "Koordinator PWD", "photo_url": null },
+    { "id": "committee-risma", "group": "mosque", "name": "RESTU", "role": "Koordinator Risma dan Pemuda", "photo_url": null },
+    { "id": "committee-zis", "group": "mosque", "name": "OKSA", "role": "Koordinator ZIS dan Wakaf", "photo_url": null },
+    { "id": "committee-documentation", "group": "mosque", "name": "M. RIFALDO", "role": "Koordinator Dokumentasi", "photo_url": null },
+    { "id": "committee-humas", "group": "mosque", "name": "DAINDANG RUHIYAT", "role": "Koordinator Humas", "photo_url": null },
+    { "id": "committee-economy", "group": "mosque", "name": "IR. DEDI HERMAWAN", "role": "Koordinator Ekonomi dan Dana", "photo_url": null },
+    { "id": "committee-facility", "group": "mosque", "name": "TUKIRAN", "role": "Koordinator Sarpras", "photo_url": null },
+    { "id": "committee-cleanliness", "group": "mosque", "name": "SUBANI", "role": "Koordinator Kebersihan", "photo_url": null },
+    { "id": "committee-security", "group": "mosque", "name": "UNTUNG WALUYO", "role": "Koordinator Keamanan", "photo_url": null }
+  ]
 }

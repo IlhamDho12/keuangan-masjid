@@ -43,11 +43,14 @@ function getLocalIpAddress() {
 // Inital seed data for db.json if database doesn't exist
 const initialDbState = {
     transactions: [
-        { id: 'tx-demo-1', date: getRelativeDateString(0), amount: 2750000, type: 'income', description: 'Infak Jumat pekan pertama Juli', storage: 'cash', receipt_url: null },
-        { id: 'tx-demo-2', date: getRelativeDateString(1), amount: 1500000, type: 'income', description: 'Transfer donatur untuk program santunan', storage: 'bank', receipt_url: null },
-        { id: 'tx-demo-3', date: getRelativeDateString(2), amount: 420000, type: 'expense', description: 'Pembelian perlengkapan kebersihan masjid', storage: 'cash', receipt_url: null },
-        { id: 'tx-demo-4', date: getRelativeDateString(6), amount: 875000, type: 'expense', description: 'Pembayaran tagihan listrik dan air', storage: 'bank', receipt_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23f1f5f9"/><text x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%2364748b">BUKTI PEMBAYARAN UTILITAS</text></svg>' },
-        { id: 'tx-demo-5', date: '2026-05-18', amount: 3200000, type: 'income', description: 'Donasi pembangunan kanopi halaman', storage: 'bank', receipt_url: null }
+        { id: 'tx-20261030-saldo-kas', date: '2026-10-30', amount: 1472000, type: 'income', description: 'Saldo kas', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261030-infaq-kotak-amal', date: '2026-10-30', amount: 500000, type: 'income', description: 'Infaq kotak amal', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261102-sekolah-abu-bakar', date: '2026-11-02', amount: 250000, type: 'income', description: 'Dari Sekolah Abu Bakar', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261102-insentif-marbot-tpa', date: '2026-11-02', amount: 1450000, type: 'expense', description: 'Insentif marbot dan TPA', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261106-operasional-masjid', date: '2026-11-06', amount: 300000, type: 'expense', description: 'Operasional masjid', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261106-infaq-kotak-amal', date: '2026-11-06', amount: 650000, type: 'income', description: 'Infaq kotak amal', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261113-operasional-masjid', date: '2026-11-13', amount: 245000, type: 'expense', description: 'Operasional masjid', storage: 'cash', receipt_url: null },
+        { id: 'tx-20261113-infaq-jumat', date: '2026-11-13', amount: 600000, type: 'income', description: 'Infaq Jumat', storage: 'cash', receipt_url: null }
     ],
     projects: [
         { id: 'proj-demo-1', title: 'Perbaikan Sound System Masjid', target_amount: 8500000, collected_amount: 4250000, status: 'active', description: 'Penggantian mixer audio dan beberapa mikrofon agar suara imam serta penceramah lebih jelas.' },
@@ -60,8 +63,8 @@ const initialDbState = {
         { id: 'fb-demo-3', sender_name: 'Pak Dani', phone_number: '085612345678', message: 'Usul agar program perbaikan sound system diprioritaskan sebelum kegiatan pengajian bulanan.', status: 'unread', created_at: getRelativeDateString(5) }
     ],
     adminPassword: 'raudhatul',
-    treasurerName: 'H. Sudirman, S.E.',
-    treasurerRole: 'Bendahara Utama',
+    treasurerName: 'JALAL NASRODIN',
+    treasurerRole: 'Bendahara',
     treasurerAvatar: '',
     bankName: 'BSI',
     bankBranch: 'KC Pendopo',
@@ -156,7 +159,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     const localIp = getLocalIpAddress();
     console.log(`\n======================================================`);
-    console.log(`Sistem Informasi Keuangan Masjid Raudhatul Khoiriyah`);
+    console.log(`Sistem Informasi Keuangan Masjid Darussalam`);
     console.log(`======================================================`);
     console.log(`Server offline-first AKTIF dan siap digunakan!`);
     console.log(`Akses Lokal (PC ini): http://localhost:${PORT}`);
