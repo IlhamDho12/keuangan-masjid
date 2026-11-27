@@ -8,14 +8,20 @@ const FIREBASE_CONFIG = {
     appId: '1:777548315983:web:d61cc7602e211088c8d93a'
 };
 
+const IS_LOCAL_PREVIEW = window.__MASJID_READ_ONLY_PREVIEW__ === true
+    || window.location.protocol === 'file:'
+    || window.location.hostname === 'localhost'
+    || window.location.hostname === '127.0.0.1'
+    || window.location.port !== '';
 const ADMIN_LOGIN_EMAIL = '2010802002@radenfatah.ac.id';
 const ADMIN_EMAILS = [ADMIN_LOGIN_EMAIL];
 const APP_SETTINGS_DOC = 'main';
 const PUBLIC_ACCESS_URL = 'https://keuangan-masjid-rk.web.app';
 const PUBLIC_ACCESS_QR_SRC = 'assets/access-qr.png?v=20260701';
+const DEFAULT_QRIS_IMAGE = 'assets/masjid-darussalam-qris.png';
 const PRAYER_LOCATION = {
-    latitude: -3.9716,
-    longitude: 103.0712,
+    latitude: -5.377217,
+    longitude: 105.293008,
     timezone: 'Asia/Jakarta',
     method: 20
 };
@@ -77,7 +83,7 @@ const getRelativeDateString = (daysAgo) => {
 };
 
 const createDemoGalleryImage = (title, primary, secondary) => (
-    `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${primary}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="900" height="560" fill="url(#g)"/><circle cx="740" cy="120" r="90" fill="rgba(255,255,255,.16)"/><circle cx="130" cy="450" r="130" fill="rgba(255,255,255,.12)"/><rect x="95" y="95" width="710" height="370" rx="34" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.35)" stroke-width="3"/><text x="450" y="265" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800" fill="white">${title}</text><text x="450" y="320" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600" fill="rgba(255,255,255,.82)">Masjid Raudhatul Khoiriyah</text></svg>`)}`
+    `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${primary}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="900" height="560" fill="url(#g)"/><circle cx="740" cy="120" r="90" fill="rgba(255,255,255,.16)"/><circle cx="130" cy="450" r="130" fill="rgba(255,255,255,.12)"/><rect x="95" y="95" width="710" height="370" rx="34" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.35)" stroke-width="3"/><text x="450" y="265" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="800" fill="white">${title}</text><text x="450" y="320" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600" fill="rgba(255,255,255,.82)">Masjid Darussalam</text></svg>`)}`
 );
 
 function compressImageFile(file, maxSize = 960, quality = 0.72) {
@@ -135,28 +141,55 @@ function prepareQrisImageFile(file, maxSize = 720) {
 }
 
 function getActiveQrisSource() {
-    return state.tempQrisImageBase64 !== null ? state.tempQrisImageBase64 : state.qrisImage;
+    return state.tempQrisImageBase64 !== null ? state.tempQrisImageBase64 : (state.qrisImage || '');
 }
 
 const INITIAL_COMMITTEE_MEMBERS = [
-    { id: 'committee-mosque-chair', group: 'mosque', name: 'Supriyadi', role: 'Ketua', photo_url: null },
-    { id: 'committee-mosque-secretary', group: 'mosque', name: 'Dr. Rahmad', role: 'Sekretaris', photo_url: null },
-    { id: 'committee-mosque-treasurer', group: 'mosque', name: 'Ardy Toher', role: 'Bendahara', photo_url: null },
-    { id: 'committee-mosque-worship', group: 'mosque', name: 'Kiai Damrulah', role: 'Peribadatan', photo_url: null },
-    { id: 'committee-mosque-phbi', group: 'mosque', name: 'Alkodri', role: 'Ketua Peringatan Hari Besar Islam', photo_url: null },
-    { id: 'committee-mosque-public-relations', group: 'mosque', name: 'Mang Kader', role: 'Humas', photo_url: null },
-    { id: 'committee-mosque-development', group: 'mosque', name: 'Belum Diisi', role: 'Ketua Pembangunan', photo_url: null },
-    { id: 'committee-youth-chair', group: 'youth', name: 'Ucok', role: 'Ketua', photo_url: null },
-    { id: 'committee-youth-vice-chair', group: 'youth', name: 'Redo', role: 'Wakil Ketua', photo_url: null },
-    { id: 'committee-youth-secretary', group: 'youth', name: 'Kak Deki', role: 'Sekretaris', photo_url: null },
-    { id: 'committee-youth-treasurer', group: 'youth', name: 'Yuk Desi', role: 'Bendahara', photo_url: null },
-    { id: 'committee-youth-study', group: 'youth', name: 'Kak Edi', role: 'Pengajian', photo_url: null },
-    { id: 'committee-youth-public-relations', group: 'youth', name: 'Ronal', role: 'Humas', photo_url: null }
+    { id: 'committee-chair', group: 'mosque', name: 'ANAS GHOFUR', role: 'Ketua Umum', photo_url: null },
+    { id: 'committee-advisor-1', group: 'mosque', name: 'H. Satria Thoha, S.E., M.M.', role: 'Dewan Penasihat Takmir', photo_url: null },
+    { id: 'committee-advisor-2', group: 'mosque', name: 'H. Suwardi', role: 'Dewan Penasihat Takmir', photo_url: null },
+    { id: 'committee-advisor-3', group: 'mosque', name: 'H. Hendra Jaya, S.H., M.H.', role: 'Dewan Penasihat Takmir', photo_url: null },
+    { id: 'committee-advisor-4', group: 'mosque', name: 'Drs. H. Kamroni', role: 'Dewan Penasihat Takmir', photo_url: null },
+    { id: 'committee-advisor-5', group: 'mosque', name: 'H. Kusno, S.Ag., M.Pd.I.', role: 'Dewan Penasihat Takmir', photo_url: null },
+    { id: 'committee-advisor-6', group: 'mosque', name: 'H. Mujiburrohman, S.Ag., M.Pd.I.', role: 'Dewan Penasehat Takmir', photo_url: null },
+    { id: 'committee-advisor-7', group: 'mosque', name: 'Drs. H. Marsudiluhur', role: 'Dewan Penasehat Takmir', photo_url: null },
+    { id: 'committee-advisor-8', group: 'mosque', name: 'H. Yustam Efendi, S.H., M.M.', role: 'Dewan Penasehat Takmir', photo_url: null },
+    { id: 'committee-vice-chair-1', group: 'mosque', name: 'ALIMIN, S.Ag.', role: 'Ketua I', photo_url: null },
+    { id: 'committee-vice-chair-2', group: 'mosque', name: 'H. MISRIN', role: 'Ketua II', photo_url: null },
+    { id: 'committee-vice-chair-3', group: 'mosque', name: 'H. DANNI WAHYUDIALI', role: 'Ketua III', photo_url: null },
+    { id: 'committee-secretary-1', group: 'mosque', name: 'DEDY NURHIDAYAT', role: 'Sekretaris Umum', photo_url: null },
+    { id: 'committee-secretary-2', group: 'mosque', name: 'EZA ROSIDI', role: 'Sekretaris II', photo_url: null },
+    { id: 'committee-treasurer-1', group: 'mosque', name: 'JALAL NASRODIN', role: 'Bendahara I', photo_url: null },
+    { id: 'committee-treasurer-2', group: 'mosque', name: 'M. RIZAL', role: 'Bendahara II', photo_url: null },
+    { id: 'committee-phbi', group: 'mosque', name: 'ALKODRI', role: 'Koordinator Peringatan Hari Besar Islam', photo_url: null },
+    { id: 'committee-development', group: 'mosque', name: 'ANAS TAROREH', role: 'Koordinator Pembangunan', photo_url: null },
+    { id: 'committee-ritual', group: 'mosque', name: 'PROF. DR. HJ. FENI ROSALIA, M.SI.', role: 'Koordinator PWD', photo_url: null },
+    { id: 'committee-risma', group: 'mosque', name: 'RESTU', role: 'Koordinator Risma dan Pemuda', photo_url: null },
+    { id: 'committee-zis', group: 'mosque', name: 'OKSA', role: 'Koordinator ZIS dan Wakaf', photo_url: null },
+    { id: 'committee-documentation', group: 'mosque', name: 'M. RIFALDO', role: 'Koordinator Dokumentasi', photo_url: null },
+    { id: 'committee-humas', group: 'mosque', name: 'DAINDANG RUHIYAT', role: 'Koordinator Humas', photo_url: null },
+    { id: 'committee-economy', group: 'mosque', name: 'IR. DEDI HERMAWAN', role: 'Koordinator Ekonomi dan Dana', photo_url: null },
+    { id: 'committee-facility', group: 'mosque', name: 'TUKIRAN', role: 'Koordinator Sarpras', photo_url: null },
+    { id: 'committee-cleanliness', group: 'mosque', name: 'SUBANI', role: 'Koordinator Kebersihan', photo_url: null },
+    { id: 'committee-security', group: 'mosque', name: 'UNTUNG WALUYO', role: 'Koordinator Keamanan', photo_url: null }
 ];
 
 const INITIAL_GALLERY_ITEMS = [];
 const INITIAL_SCHEDULES = [];
-const INITIAL_TRANSACTIONS = [];
+const INITIAL_TRANSACTIONS = [
+    { id: 'tx-20261030-saldo-kas', date: '2026-10-30', amount: 1472000, type: 'income', description: 'Saldo kas', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261030-infaq-kotak-amal', date: '2026-10-30', amount: 500000, type: 'income', description: 'Infaq kotak amal', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261102-sekolah-abu-bakar', date: '2026-11-02', amount: 250000, type: 'income', description: 'Dari Sekolah Abu Bakar', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261102-insentif-marbot-tpa', date: '2026-11-02', amount: 1450000, type: 'expense', description: 'Insentif marbot dan TPA', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261106-operasional-masjid', date: '2026-11-06', amount: 300000, type: 'expense', description: 'Operasional masjid', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261106-infaq-kotak-amal', date: '2026-11-06', amount: 650000, type: 'income', description: 'Infaq kotak amal', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261113-operasional-masjid', date: '2026-11-13', amount: 245000, type: 'expense', description: 'Operasional masjid', storage: 'cash', receipt_url: null },
+    { id: 'tx-20261113-infaq-jumat', date: '2026-11-13', amount: 600000, type: 'income', description: 'Infaq Jumat', storage: 'cash', receipt_url: null }
+];
+const USE_LOCAL_TRANSACTION_SEED = IS_LOCAL_PREVIEW;
+function notifyLocalTransactionsReadOnly() {
+    showToast('Transaksi memakai data lokal sementara dan hanya dapat diubah setelah Firestore baru siap.', 'error');
+}
 const INITIAL_PROJECTS = [];
 const INITIAL_FEEDBACKS = [];
 
@@ -165,14 +198,14 @@ let state = {
     transactions: [],
     projects: [],
     feedbacks: [],
-    treasurerName: 'Ardi Toher',
+    treasurerName: 'JALAL NASRODIN',
     treasurerRole: 'Bendahara',
     treasurerAvatar: '',
     bankName: 'Bri',
     bankAccountNumber: '71234567890',
     bankAccountHolder: 'Masjid Raudhatul Khoiriyah',
     whatsappNumber: '6285369463373',
-    qrisImage: '',
+    qrisImage: DEFAULT_QRIS_IMAGE,
     isAdminAuthenticated: false,
     currentRole: sessionStorage.getItem('current_role') || 'public', // 'public' | 'admin'
     activeAdminTab: sessionStorage.getItem('active_admin_tab') || DEFAULT_ADMIN_TAB,
@@ -223,17 +256,24 @@ function applyLoadedState(parsed, includeFeedbacks = true) {
     state.transactions = Array.isArray(parsed.transactions) ? parsed.transactions : [...INITIAL_TRANSACTIONS];
     state.projects = Array.isArray(parsed.projects) ? parsed.projects : [...INITIAL_PROJECTS];
     if (includeFeedbacks) state.feedbacks = parsed.feedbacks || [];
-    state.treasurerName = parsed.treasurerName || 'Ardi Toher';
+    state.treasurerName = parsed.treasurerName || 'JALAL NASRODIN';
     state.treasurerRole = parsed.treasurerRole || 'Bendahara';
     state.treasurerAvatar = parsed.treasurerAvatar || '';
     state.bankName = parsed.bankName || 'Bri';
     state.bankAccountNumber = parsed.bankAccountNumber || '71234567890';
     state.bankAccountHolder = parsed.bankAccountHolder || 'Masjid Raudhatul Khoiriyah';
     state.whatsappNumber = parsed.whatsappNumber || '6285369463373';
-    state.qrisImage = parsed.qrisImage || '';
+    state.qrisImage = parsed.qrisImage === null
+        ? ''
+        : (parsed.qrisImage || DEFAULT_QRIS_IMAGE);
     
-    const loadedCommitteeMembers = Array.isArray(parsed.committeeMembers) ? parsed.committeeMembers : [...INITIAL_COMMITTEE_MEMBERS];
-    state.committeeMembers = loadedCommitteeMembers;
+    const loadedCommitteeMembers = Array.isArray(parsed.committeeMembers) ? parsed.committeeMembers : null;
+    const hasOldCommitteeNames = loadedCommitteeMembers?.some(member =>
+        ['Supriyadi', 'Dr. Rahmad', 'Ardy Toher', 'Kiai Damrulah', 'Mang Kader', 'Ucok', 'Redo'].includes(member.name)
+    );
+    state.committeeMembers = !loadedCommitteeMembers || hasOldCommitteeNames
+        ? INITIAL_COMMITTEE_MEMBERS.map(item => ({ ...item }))
+        : loadedCommitteeMembers;
     
     state.galleryItems = Array.isArray(parsed.galleryItems) ? parsed.galleryItems : [...INITIAL_GALLERY_ITEMS];
     state.schedules = cleanupExpiredSchedules(Array.isArray(parsed.schedules) ? parsed.schedules : [...INITIAL_SCHEDULES]);
@@ -295,13 +335,15 @@ async function replaceCollection(batch, collectionName, items) {
 
 async function loadStateFromFirestore(includeFeedbacks) {
     const [transactions, projects, galleryItems, settingsDoc] = await Promise.all([
-        getCollectionData('transactions'),
+        USE_LOCAL_TRANSACTION_SEED ? Promise.resolve([]) : getCollectionData('transactions'),
         getCollectionData('projects'),
         getCollectionData('galleryItems'),
         firestoreDb.collection('settings').doc(APP_SETTINGS_DOC).get()
     ]);
     const settingsData = settingsDoc.exists ? settingsDoc.data() : {};
-    const loadedTransactions = transactions.length ? transactions : (settingsDoc.exists ? [] : [...INITIAL_TRANSACTIONS]);
+    const loadedTransactions = USE_LOCAL_TRANSACTION_SEED
+        ? INITIAL_TRANSACTIONS.map(transaction => ({ ...transaction }))
+        : (transactions.length ? transactions : (settingsDoc.exists ? [] : [...INITIAL_TRANSACTIONS]));
     const loadedProjects = projects.length ? projects : (settingsDoc.exists ? [] : [...INITIAL_PROJECTS]);
     const loadedGalleryItems = galleryItems.length
         ? galleryItems
@@ -326,10 +368,13 @@ async function loadStateFromFirestore(includeFeedbacks) {
 async function saveState(options = {}) {
     const { requireRemote = false } = options;
     try {
+        if (IS_LOCAL_PREVIEW) throw new Error('Local preview writes are disabled to protect the production Firestore.');
         if (!firebaseReady || !state.isAdminAuthenticated) throw new Error('Firestore admin write unavailable');
 
         const batch = firestoreDb.batch();
-        await replaceCollection(batch, 'transactions', state.transactions);
+        if (!USE_LOCAL_TRANSACTION_SEED) {
+            await replaceCollection(batch, 'transactions', state.transactions);
+        }
         await replaceCollection(batch, 'projects', state.projects);
         await replaceCollection(batch, 'feedbacks', state.feedbacks);
         await replaceCollection(batch, 'galleryItems', state.galleryItems);
@@ -339,7 +384,13 @@ async function saveState(options = {}) {
         console.log('State saved to Firestore successfully.');
         return true;
     } catch (e) {
-        console.warn('Firestore unavailable, saving state to localStorage fallback.', e);
+        console.warn(IS_LOCAL_PREVIEW
+            ? 'Local preview is read-only; Firestore was not modified.'
+            : 'Firestore unavailable, saving state to localStorage fallback.', e);
+        if (IS_LOCAL_PREVIEW) {
+            if (requireRemote) throw e;
+            return false;
+        }
         localStorage.setItem('masjid_finance_state_v4', JSON.stringify(getFullStateSnapshot()));
         if (requireRemote) throw e;
         return false;
@@ -352,7 +403,9 @@ async function persistAdminState() {
         return true;
     } catch (err) {
         console.error('Admin save failed', err);
-        showToast('Data belum tersimpan ke database. Cek koneksi/login admin lalu coba lagi.', 'error');
+        showToast(IS_LOCAL_PREVIEW
+            ? 'Clone lokal hanya-baca agar tidak mengubah Firestore website asli.'
+            : 'Data belum tersimpan ke database. Cek koneksi/login admin lalu coba lagi.', 'error');
         return false;
     }
 }
@@ -396,14 +449,14 @@ function resetToInitialData() {
     state.transactions = [...INITIAL_TRANSACTIONS];
     state.projects = [...INITIAL_PROJECTS];
     state.feedbacks = [...INITIAL_FEEDBACKS];
-    state.treasurerName = 'Ardi Toher';
+    state.treasurerName = 'JALAL NASRODIN';
     state.treasurerRole = 'Bendahara';
     state.treasurerAvatar = '';
     state.bankName = 'Bri';
     state.bankAccountNumber = '71234567890';
     state.bankAccountHolder = 'Masjid Raudhatul Khoiriyah';
     state.whatsappNumber = '6285369463373';
-    state.qrisImage = '';
+    state.qrisImage = DEFAULT_QRIS_IMAGE;
     state.committeeMembers = [...INITIAL_COMMITTEE_MEMBERS];
     state.galleryItems = [...INITIAL_GALLERY_ITEMS];
     state.schedules = [...INITIAL_SCHEDULES];
@@ -525,7 +578,7 @@ function updateProfileDisplay() {
             .substr(0, 2);
         
         const finalInitials = initials || 'BD';
-        avatarSrc = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23064e3b'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='38' fill='%23fbbf24'>${finalInitials}</text></svg>`;
+        avatarSrc = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23343a40'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='38' fill='%23c5a24a'>${finalInitials}</text></svg>`;
     }
 
     if (avatarEl) avatarEl.src = avatarSrc;
@@ -547,7 +600,7 @@ function updateQrisDisplay() {
     const emptyState = document.getElementById('qris-empty-state');
     const downloadBtn = document.getElementById('btn-download-qris');
     const qrisSource = getActiveQrisSource();
-    const publicQrisSource = state.qrisImage;
+    const publicQrisSource = state.qrisImage || '';
 
     if (previewEl) {
         previewEl.innerHTML = qrisSource
@@ -772,7 +825,7 @@ function switchMode(mode, preventPushState = false) {
         document.getElementById('btn-go-admin').style.display = 'flex';
         document.getElementById('btn-admin-logout').style.display = 'none';
         document.getElementById('admin-header-profile').style.display = 'none';
-        document.getElementById('header-subtitle').textContent = 'Pendopo, Empat Lawang, Sumatera Selatan';
+        document.getElementById('header-subtitle').textContent = 'Way Dadi, Sukarame, Bandar Lampung';
         
         switchAppScreen('pub-screen-beranda', 'public', preventPushState);
         renderPublicView();
@@ -781,7 +834,7 @@ function switchMode(mode, preventPushState = false) {
         document.getElementById('btn-go-admin').style.display = 'none';
         document.getElementById('btn-admin-logout').style.display = 'none';
         document.getElementById('admin-header-profile').style.display = 'none';
-        document.getElementById('header-subtitle').textContent = 'Pendopo, Empat Lawang, Sumatera Selatan';
+        document.getElementById('header-subtitle').textContent = 'Way Dadi, Sukarame, Bandar Lampung';
     } else if (mode === 'admin') {
         state.currentRole = 'admin';
         document.getElementById('screens-admin').classList.add('active');
@@ -891,12 +944,12 @@ window.viewCommitteeDetail = function(id) {
     const groupEl = document.getElementById('committee-detail-group');
     if (!modal || !photoEl || !nameEl || !roleEl || !groupEl) return;
     
-    const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
+    const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23343a40'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
     
     photoEl.src = avatarSrc;
     nameEl.textContent = member.name;
     roleEl.textContent = member.role;
-    groupEl.textContent = member.group === 'mosque' ? 'Pengurus Masjid Raudhatul Khoiriyah' : 'Remaja Masjid Raudhatul Khoiriyah';
+    groupEl.textContent = member.group === 'mosque' ? 'Pengurus Masjid Darussalam' : 'Remaja Masjid Darussalam';
     
     modal.classList.add('active');
 };
@@ -1349,7 +1402,7 @@ function renderPublicProjects() {
                 <p style="margin: 0.25rem 0 0; line-height: 1.4; color: var(--neutral-700);">
                     Transfer ke <strong>${state.bankName} ${state.bankAccountNumber}</strong> dengan berita transfer: <code>"${p.title.substr(0, 25)}"</code>
                 </p>
-                <a href="https://wa.me/${state.whatsappNumber}?text=${encodeURIComponent(`Assalamu'alaikum Pengurus Masjid Raudhatul Khoiriyah, saya ingin mengonfirmasi donasi transfer untuk proyek: ${p.title}`)}" 
+                <a href="https://wa.me/${state.whatsappNumber}?text=${encodeURIComponent(`Assalamu'alaikum Pengurus Masjid Darussalam, saya ingin mengonfirmasi donasi transfer untuk proyek: ${p.title}`)}" 
                    target="_blank" 
                    style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; color: var(--accent-700); font-weight: 700; text-decoration: none; font-size: 0.75rem; transition: opacity 0.2s;"
                    onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
@@ -1518,6 +1571,11 @@ window.viewReceipt = function(txId) {
 };
 
 async function submitPublicFeedback(newFeedback, formInputs) {
+    if (IS_LOCAL_PREVIEW) {
+        showToast('Pengiriman aspirasi dinonaktifkan di preview publik.', 'error');
+        return;
+    }
+
     state.feedbacks.push(newFeedback);
 
     try {
@@ -1714,6 +1772,11 @@ window.showSuccess = function(title, message) {
 
 // Handle transaction deletion
 window.deleteTransaction = function(txId) {
+    if (USE_LOCAL_TRANSACTION_SEED) {
+        notifyLocalTransactionsReadOnly();
+        return;
+    }
+
     showConfirm('Apakah Anda yakin ingin menghapus data transaksi ini? Tindakan ini akan mengupdate kas.', async () => {
         const deletedTx = state.transactions.find(t => t.id === txId);
         // Clear edit mode if deleting the currently-edited tx
@@ -1736,6 +1799,11 @@ window.deleteTransaction = function(txId) {
 
 // Load transaction into form for editing
 window.editTransaction = function(txId) {
+    if (USE_LOCAL_TRANSACTION_SEED) {
+        notifyLocalTransactionsReadOnly();
+        return;
+    }
+
     const tx = getTransactions().find(t => t.id === txId);
     if (!tx) return;
     
@@ -1822,6 +1890,11 @@ function applyProjectDonationDelta(projectId, delta) {
 // Handle New Transaction Submit (tambah atau edit)
 function handleAdminTxSubmit(e) {
     e.preventDefault();
+    if (USE_LOCAL_TRANSACTION_SEED) {
+        notifyLocalTransactionsReadOnly();
+        return;
+    }
+
     const dateInput = document.getElementById('tx-date');
     const typeSelect = document.getElementById('tx-type');
     const amountInput = document.getElementById('tx-amount');
@@ -2028,6 +2101,11 @@ window.openProjectDonationForm = function(id) {
 
 function handleProjectDonationSubmit(e) {
     e.preventDefault();
+    if (USE_LOCAL_TRANSACTION_SEED) {
+        notifyLocalTransactionsReadOnly();
+        return;
+    }
+
     const projectId = document.getElementById('project-donation-id')?.value;
     const project = state.projects.find(p => p.id === projectId);
     const dateVal = document.getElementById('project-donation-date')?.value;
@@ -2422,7 +2500,7 @@ function downloadQRIS() {
 
     try {
         const link = document.createElement('a');
-        link.download = 'QRIS_Masjid_Raudhatul_Khoiriyah.png';
+        link.download = 'QRIS_Masjid_Darussalam.png';
         link.href = qrisSource;
         document.body.appendChild(link);
         link.click();
@@ -2534,12 +2612,12 @@ async function downloadAccessQrPdf() {
     pdf.setFontSize(18);
     pdf.text('PORTAL TRANSPARANSI KEUANGAN', centerX, 38, { align: 'center' });
     pdf.setFontSize(16);
-    pdf.text('Masjid Raudhatul Khoiriyah', centerX, 49, { align: 'center' });
+    pdf.text('Masjid Darussalam', centerX, 49, { align: 'center' });
 
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
     pdf.setTextColor(71, 85, 105);
-    pdf.text('Kelurahan Pagar Tengah, Kec. Pendopo', centerX, 57, { align: 'center' });
+    pdf.text('Way Dadi, Kel. Way Dadi, Kec. Sukarame, Kota Bandar Lampung', centerX, 57, { align: 'center' });
 
     pdf.setDrawColor(203, 213, 225);
     pdf.setLineWidth(0.4);
@@ -2701,7 +2779,7 @@ function renderPublicCommittee() {
     const youthMembers = state.committeeMembers.filter(m => m.group === 'youth');
 
     const renderCard = (member) => {
-        const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
+        const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23343a40'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0, 2).toUpperCase()}</text></svg>`;
         return `
             <div class="committee-card" onclick="viewCommitteeDetail('${member.id}')" style="cursor: pointer;">
                 <img class="committee-photo" src="${avatarSrc}" alt="Foto ${member.name}">
@@ -2842,7 +2920,7 @@ function renderAdminCommitteeList() {
 
     const renderMemberItem = (member) => {
         const isEditMode = state.editingCommitteeId === member.id;
-        const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230f766e'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0,2).toUpperCase()}</text></svg>`;
+        const avatarSrc = (member.photo_url && member.photo_url !== 'null') ? member.photo_url : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23343a40'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='32' fill='white'>${member.name.substring(0,2).toUpperCase()}</text></svg>`;
 
         return `
             <div class="admin-content-item" style="${isEditMode ? 'border-color: var(--primary-500); background: var(--primary-50);' : ''}">
@@ -3672,7 +3750,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (!state.qrisImage) return;
             showConfirm('Hapus QRIS yang sedang digunakan?', async () => {
-                state.qrisImage = '';
+                state.qrisImage = null;
                 state.tempQrisImageBase64 = null;
                 if (qrisInput) qrisInput.value = '';
                 touchAdminUpdate();
